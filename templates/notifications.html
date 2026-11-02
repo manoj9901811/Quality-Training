@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+
+{% block title %}
+Notifications | QT Platform
+{% endblock %}
+
+
+{% block page_title %}
+Notifications
+{% endblock %}
+
+
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/notifications.css'
+    ) }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="notifications-page">
+
+
+    <!-- ============================================================
+         BREADCRUMB
+    ============================================================ -->
+
+    <div class="breadcrumb">
+
+        <span>
+            Dashboard
+        </span>
+
+        <i data-lucide="chevron-right"></i>
+
+        <strong>
+            Notifications
+        </strong>
+
+    </div>
+
+
+    <!-- ============================================================
+         PAGE HEADER
+    ============================================================ -->
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                Notifications
+            </h1>
+
+            <p>
+                Stay updated with applications,
+                projects and training schedules.
+            </p>
+
+        </div>
+
+
+        {% if unread_count > 0 %}
+
+        <form
+            method="POST"
+            action="{{ url_for('notifications') }}"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <input
+                type="hidden"
+                name="action"
+                value="read-all"
+            >
+
+            <button
+                type="submit"
+                class="mark-all-button"
+            >
+
+                <i data-lucide="check-check"></i>
+
+                <span>
+                    Mark all as read
+                </span>
+
+            </button>
+
+        </form>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ============================================================
+         STATISTICS
+    ============================================================ -->
+
+    <div class="notification-stats">
+
+
+        <!-- TOTAL -->
+
+        <div class="notification-stat-card">
+
+            <div class="notification-stat-icon">
+
+                <i data-lucide="bell"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Total Notifications
+                </span>
+
+                <strong>
+                    {{ notifications|length }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- UNREAD -->
+
+        <div class="notification-stat-card unread-card">
+
+            <div class="notification-stat-icon">
+
+                <i data-lucide="mail"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Unread
+                </span>
+
+                <strong>
+                    {{ unread_count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- READ -->
+
+        <div class="notification-stat-card">
+
+            <div class="notification-stat-icon">
+
+                <i data-lucide="mail-open"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Read
+                </span>
+
+                <strong>
+                    {{ notifications|length - unread_count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         MAIN NOTIFICATIONS CARD
+    ============================================================ -->
+
+    <div class="notifications-card">
+
+
+        <!-- CARD HEADER -->
+
+        <div class="notifications-card-header">
+
+            <div class="notifications-card-title">
+
+                <div class="notifications-title-icon">
+
+                    <i data-lucide="bell"></i>
+
+                </div>
+
+                <div>
+
+                    <h2>
+                        All Notifications
+                    </h2>
+
+                    <p>
+                        Your latest QT Platform updates
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- FILTER -->
+
+            <div class="notification-filter">
+
+                <button
+                    type="button"
+                    class="notification-filter-button active"
+                    data-filter="all"
+                >
+                    All
+                </button>
+
+
+                <button
+                    type="button"
+                    class="notification-filter-button"
+                    data-filter="unread"
+                >
+                    Unread
+                </button>
+
+
+                <button
+                    type="button"
+                    class="notification-filter-button"
+                    data-filter="read"
+                >
+                    Read
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ========================================================
+             NOTIFICATION LIST
+        ======================================================== -->
+
+        <div class="notifications-list">
+
+
+            {% if notifications %}
+
+
+                {% for notification in notifications %}
+
+
+                <div
+                    class="
+                        notification-page-item
+                        {% if not notification.is_read %}
+                            unread
+                        {% endif %}
+                    "
+                    data-read="{{ 'true' if notification.is_read else 'false' }}"
+                >
+
+
+                    <!-- ==================================================
+                         NOTIFICATION ICON
+                    ================================================== -->
+
+                    <div
+                        class="
+                            notification-page-icon
+                            notification-{{ notification.notification_type|lower }}
+                        "
+                    >
+
+
+                        {% if notification.notification_type == "APPLICATION" %}
+
+                            <i
+                                data-lucide="file-check-2"
+                            ></i>
+
+
+                        {% elif notification.notification_type == "PROJECT" %}
+
+                            <i
+                                data-lucide="folder-kanban"
+                            ></i>
+
+
+                        {% elif notification.notification_type == "SCHEDULE" %}
+
+                            <i
+                                data-lucide="calendar-days"
+                            ></i>
+
+
+                        {% elif notification.notification_type == "TRAINER" %}
+
+                            <i
+                                data-lucide="users"
+                            ></i>
+
+
+                        {% elif notification.notification_type == "PAYMENT" %}
+
+                            <i
+                                data-lucide="credit-card"
+                            ></i>
+
+
+                        {% else %}
+
+                            <i
+                                data-lucide="bell"
+                            ></i>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    <!-- ==================================================
+                         CONTENT
+                    ================================================== -->
+
+                    <div class="notification-page-content">
+
+
+                        <div class="notification-page-top">
+
+                            <h3>
+                                {{ notification.title }}
+                            </h3>
+
+
+                            {% if not notification.is_read %}
+
+                            <span class="unread-label">
+                                Unread
+                            </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <p>
+                            {{ notification.message }}
+                        </p>
+
+
+                        <!-- IST TIME -->
+
+                        <span class="notification-page-time">
+
+                            {% if notification.created_at %}
+
+                            {{
+                                (
+                                    notification.created_at
+                                    + timedelta(
+                                        hours=5,
+                                        minutes=30
+                                    )
+                                ).strftime(
+                                    '%d %b %Y, %I:%M %p'
+                                )
+                            }}
+
+                            {% endif %}
+
+                        </span>
+
+
+                    </div>
+
+
+                    <!-- ==================================================
+                         ACTION
+                    ================================================== -->
+
+                    <div class="notification-page-action">
+
+
+                        {% if not notification.is_read %}
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('notifications') }}"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token }}"
+                            >
+
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="read"
+                            >
+
+
+                            <input
+                                type="hidden"
+                                name="notification_id"
+                                value="{{ notification.id }}"
+                            >
+
+
+                            <button
+                                type="submit"
+                                class="mark-read-button"
+                                title="Mark as read"
+                                aria-label="Mark notification as read"
+                            >
+
+                                <i
+                                    data-lucide="check"
+                                ></i>
+
+                            </button>
+
+                        </form>
+
+
+                        {% else %}
+
+
+                        <span class="read-label">
+                            Read
+                        </span>
+
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                </div>
+
+
+                {% endfor %}
+
+
+            {% else %}
+
+
+                <!-- ==================================================
+                     EMPTY STATE
+                ================================================== -->
+
+                <div class="notifications-empty">
+
+                    <div class="notifications-empty-icon">
+
+                        <i
+                            data-lucide="bell-off"
+                        ></i>
+
+                    </div>
+
+
+                    <h3>
+                        No notifications yet
+                    </h3>
+
+
+                    <p>
+                        New application, project and
+                        schedule updates will appear here.
+                    </p>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/notifications.js'
+    ) }}"
+></script>
+
+{% endblock %}

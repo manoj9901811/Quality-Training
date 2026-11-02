@@ -1,0 +1,1286 @@
+{% extends "base.html" %}
+
+{% block title %}
+Settings | QT Platform
+{% endblock %}
+
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/settings.css') }}?v=1"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="settings-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="settings-header">
+
+        <div>
+
+            <div class="settings-breadcrumb">
+
+                <span>Dashboard</span>
+
+                <i data-lucide="chevron-right"></i>
+
+                <strong>Settings</strong>
+
+            </div>
+
+
+            <div class="settings-title">
+
+                <div class="settings-title-icon">
+
+                    <i data-lucide="settings"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h1>
+                        Settings
+                    </h1>
+
+                    <p>
+                        Manage your QT Platform configuration
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         FLASH
+    ====================================================== -->
+
+    {% with messages =
+        get_flashed_messages(with_categories=true)
+    %}
+
+        {% if messages %}
+
+            <div class="settings-flash">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="settings-flash-message {{ category }}"
+                    >
+
+                        <i
+                            data-lucide="{% if category == 'success' %}circle-check{% else %}circle-alert{% endif %}">
+                        </i>
+
+                        <span>
+                            {{ message }}
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- =====================================================
+         SETTINGS LAYOUT
+    ====================================================== -->
+
+    <form
+        method="POST"
+        action="{{ url_for('settings') }}"
+        id="settingsForm"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token }}"
+        >
+
+        <input
+            type="hidden"
+            name="action"
+            value="save"
+        >
+
+
+        <div class="settings-layout">
+
+
+            <!-- =================================================
+                 SIDEBAR
+            ================================================== -->
+
+            <aside class="settings-sidebar">
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item active"
+                    data-section="general"
+                >
+
+                    <i data-lucide="sliders-horizontal"></i>
+
+                    <span>General</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="users"
+                >
+
+                    <i data-lucide="users"></i>
+
+                    <span>Users & Roles</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="security"
+                >
+
+                    <i data-lucide="shield-check"></i>
+
+                    <span>Security</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="notifications"
+                >
+
+                    <i data-lucide="bell"></i>
+
+                    <span>Notifications</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="communication"
+                >
+
+                    <i data-lucide="messages-square"></i>
+
+                    <span>Communication</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="documents"
+                >
+
+                    <i data-lucide="files"></i>
+
+                    <span>Documents</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="appearance"
+                >
+
+                    <i data-lucide="palette"></i>
+
+                    <span>Appearance</span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="settings-nav-item"
+                    data-section="system"
+                >
+
+                    <i data-lucide="info"></i>
+
+                    <span>System</span>
+
+                </button>
+
+            </aside>
+
+
+
+            <!-- =================================================
+                 CONTENT
+            ================================================== -->
+
+            <main class="settings-content">
+
+
+                <!-- =============================================
+                     GENERAL
+                ============================================== -->
+
+                <section
+                    class="settings-section active"
+                    data-section-content="general"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon blue">
+                            <i data-lucide="sliders-horizontal"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                General Settings
+                            </h2>
+
+                            <p>
+                                Basic information about your platform.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-grid">
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Platform Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="platform_name"
+                                value="{{ settings.platform_name }}"
+                                maxlength="150"
+                            >
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Company Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="company_name"
+                                value="{{ settings.company_name }}"
+                                maxlength="150"
+                            >
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Company Email
+                            </label>
+
+                            <input
+                                type="email"
+                                name="company_email"
+                                value="{{ settings.company_email }}"
+                            >
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Company Phone
+                            </label>
+
+                            <input
+                                type="text"
+                                name="company_phone"
+                                value="{{ settings.company_phone }}"
+                            >
+
+                        </div>
+
+
+                        <div class="settings-field full">
+
+                            <label>
+                                Company Address
+                            </label>
+
+                            <textarea
+                                name="company_address"
+                                rows="3"
+                            >{{ settings.company_address }}</textarea>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Timezone
+                            </label>
+
+                            <select name="timezone">
+
+                                <option
+                                    value="Asia/Kolkata"
+                                    {% if settings.timezone == 'Asia/Kolkata' %}selected{% endif %}
+                                >
+                                    Asia/Kolkata (IST)
+                                </option>
+
+                                <option
+                                    value="UTC"
+                                    {% if settings.timezone == 'UTC' %}selected{% endif %}
+                                >
+                                    UTC
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Date Format
+                            </label>
+
+                            <select name="date_format">
+
+                                <option
+                                    value="DD MMM YYYY"
+                                    {% if settings.date_format == 'DD MMM YYYY' %}selected{% endif %}
+                                >
+                                    21 Sep 2026
+                                </option>
+
+                                <option
+                                    value="DD/MM/YYYY"
+                                    {% if settings.date_format == 'DD/MM/YYYY' %}selected{% endif %}
+                                >
+                                    21/09/2026
+                                </option>
+
+                                <option
+                                    value="YYYY-MM-DD"
+                                    {% if settings.date_format == 'YYYY-MM-DD' %}selected{% endif %}
+                                >
+                                    2026-09-21
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     USERS
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="users"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon purple">
+                            <i data-lucide="users"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Users & Roles
+                            </h2>
+
+                            <p>
+                                Manage platform roles and access.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="role-cards">
+
+
+                        <div class="role-card">
+
+                            <div class="role-card-icon admin">
+                                <i data-lucide="shield"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Super Admin
+                                </strong>
+
+                                <span>
+                                    Full platform access
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="role-card">
+
+                            <div class="role-card-icon vendor">
+                                <i data-lucide="building-2"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Vendor
+                                </strong>
+
+                                <span>
+                                    Requirements, projects and trainers
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="role-card">
+
+                            <div class="role-card-icon trainer">
+                                <i data-lucide="graduation-cap"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Trainer
+                                </strong>
+
+                                <span>
+                                    Assignments, schedule and attendance
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <i data-lucide="info"></i>
+
+                        <span>
+                            Detailed user management is available from
+                            the User Management module.
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     SECURITY
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="security"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon red">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Security
+                            </h2>
+
+                            <p>
+                                Configure platform security preferences.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-grid">
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Session Timeout
+                            </label>
+
+                            <div class="input-suffix">
+
+                                <input
+                                    type="number"
+                                    name="session_timeout"
+                                    value="{{ settings.session_timeout }}"
+                                    min="5"
+                                    max="1440"
+                                >
+
+                                <span>
+                                    minutes
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Minimum Password Length
+                            </label>
+
+                            <input
+                                type="number"
+                                name="password_min_length"
+                                value="{{ settings.password_min_length }}"
+                                min="6"
+                                max="32"
+                            >
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Login Attempt Limit
+                            </label>
+
+                            <input
+                                type="number"
+                                name="login_attempt_limit"
+                                value="{{ settings.login_attempt_limit }}"
+                                min="3"
+                                max="20"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="security-notice">
+
+                        <i data-lucide="lock"></i>
+
+                        <div>
+
+                            <strong>
+                                Security recommendations
+                            </strong>
+
+                            <p>
+                                Use HTTPS in production and keep your
+                                SECRET_KEY outside source control.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     NOTIFICATIONS
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="notifications"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon orange">
+                            <i data-lucide="bell"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Notification Settings
+                            </h2>
+
+                            <p>
+                                Choose which events generate notifications.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="toggle-list">
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Email Notifications
+                                </strong>
+
+                                <span>
+                                    Enable email-based notifications.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="email_notifications"
+                                {% if settings.email_notifications == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Requirement Notifications
+                                </strong>
+
+                                <span>
+                                    Notify when requirements are created or updated.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="requirement_notifications"
+                                {% if settings.requirement_notifications == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Application Notifications
+                                </strong>
+
+                                <span>
+                                    Notify when trainer applications change.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="application_notifications"
+                                {% if settings.application_notifications == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Schedule Notifications
+                                </strong>
+
+                                <span>
+                                    Notify about schedule changes.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="schedule_notifications"
+                                {% if settings.schedule_notifications == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Payment Notifications
+                                </strong>
+
+                                <span>
+                                    Notify trainers about payment updates.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="payment_notifications"
+                                {% if settings.payment_notifications == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Communication Notifications
+                                </strong>
+
+                                <span>
+                                    Notify users about new messages.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="communication_notifications"
+                                {% if settings.communication_notifications == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     COMMUNICATION
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="communication"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon green">
+                            <i data-lucide="messages-square"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Communication
+                            </h2>
+
+                            <p>
+                                Control the QT Platform chat system.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="toggle-list">
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Enable Communication
+                                </strong>
+
+                                <span>
+                                    Enable platform messaging.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="communication_enabled"
+                                {% if settings.communication_enabled == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Project Chat
+                                </strong>
+
+                                <span>
+                                    Allow communication for project assignments.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="project_chat_enabled"
+                                {% if settings.project_chat_enabled == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <label class="toggle-row">
+
+                            <div>
+
+                                <strong>
+                                    Attachments
+                                </strong>
+
+                                <span>
+                                    Allow users to send files through chat.
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="checkbox"
+                                name="communication_attachments"
+                                {% if settings.communication_attachments == '1' %}checked{% endif %}
+                            >
+
+                        </label>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Maximum Attachment Size
+                            </label>
+
+                            <div class="input-suffix">
+
+                                <input
+                                    type="number"
+                                    name="max_attachment_size"
+                                    value="{{ settings.max_attachment_size }}"
+                                    min="1"
+                                    max="100"
+                                >
+
+                                <span>
+                                    MB
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     DOCUMENTS
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="documents"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon blue">
+                            <i data-lucide="files"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Documents
+                            </h2>
+
+                            <p>
+                                Configure document upload preferences.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-grid">
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Maximum Upload Size
+                            </label>
+
+                            <div class="input-suffix">
+
+                                <input
+                                    type="number"
+                                    name="max_upload_size"
+                                    value="{{ settings.max_upload_size }}"
+                                    min="1"
+                                    max="500"
+                                >
+
+                                <span>
+                                    MB
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Storage Directory
+                            </label>
+
+                            <input
+                                type="text"
+                                name="document_storage"
+                                value="{{ settings.document_storage }}"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     APPEARANCE
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="appearance"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon purple">
+                            <i data-lucide="palette"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Appearance
+                            </h2>
+
+                            <p>
+                                Customize the visual appearance of QT Platform.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-grid">
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Theme
+                            </label>
+
+                            <select name="theme">
+
+                                <option
+                                    value="light"
+                                    {% if settings.theme == 'light' %}selected{% endif %}
+                                >
+                                    Light
+                                </option>
+
+                                <option
+                                    value="dark"
+                                    {% if settings.theme == 'dark' %}selected{% endif %}
+                                >
+                                    Dark
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="settings-field">
+
+                            <label>
+                                Primary Color
+                            </label>
+
+                            <div class="color-input">
+
+                                <input
+                                    type="color"
+                                    name="primary_color"
+                                    value="{{ settings.primary_color }}"
+                                    id="primaryColor"
+                                >
+
+                                <span
+                                    id="primaryColorValue"
+                                >
+                                    {{ settings.primary_color }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     SYSTEM
+                ============================================== -->
+
+                <section
+                    class="settings-section"
+                    data-section-content="system"
+                >
+
+                    <div class="section-heading">
+
+                        <div class="section-icon gray">
+                            <i data-lucide="info"></i>
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                System Information
+                            </h2>
+
+                            <p>
+                                Information about your QT Platform installation.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="system-info-grid">
+
+
+                        <div class="system-info-card">
+
+                            <span>
+                                Platform
+                            </span>
+
+                            <strong>
+                                QT Platform
+                            </strong>
+
+                        </div>
+
+
+                        <div class="system-info-card">
+
+                            <span>
+                                Backend
+                            </span>
+
+                            <strong>
+                                Flask / Python
+                            </strong>
+
+                        </div>
+
+
+                        <div class="system-info-card">
+
+                            <span>
+                                Database
+                            </span>
+
+                            <strong>
+                                SQLite3
+                            </strong>
+
+                        </div>
+
+
+                        <div class="system-info-card">
+
+                            <span>
+                                Access Level
+                            </span>
+
+                            <strong>
+                                SUPER_ADMIN
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+            </main>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             SAVE BAR
+        ====================================================== -->
+
+        <div class="settings-save-bar">
+
+            <span>
+
+                <i data-lucide="shield-check"></i>
+
+                Only Super Admin can change system settings.
+
+            </span>
+
+
+            <div>
+
+                <button
+                    type="reset"
+                    class="settings-cancel"
+                >
+
+                    Reset
+
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="settings-save"
+                >
+
+                    <i data-lucide="save"></i>
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/settings.js') }}?v=1"
+></script>
+
+{% endblock %}

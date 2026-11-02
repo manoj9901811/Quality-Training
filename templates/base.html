@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+            QT Platform
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/common.css') }}"
+    >
+
+    {% block css %}{% endblock %}
+
+    <!-- =====================================================
+         LUCIDE ICONS
+         ===================================================== -->
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+
+        /* =====================================================
+           NOTIFICATION SYSTEM
+           ===================================================== */
+
+        .notification-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-button {
+            position: relative;
+
+            width: 42px;
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+
+            background: #ffffff;
+            color: #475569;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .notification-button:hover {
+            background: #f8fafc;
+            color: #2563eb;
+            border-color: #dbeafe;
+
+            box-shadow:
+                0 4px 12px rgba(15, 23, 42, 0.08);
+
+            transform: translateY(-1px);
+        }
+
+        .notification-button:active {
+            transform: translateY(0);
+        }
+
+        .notification-button svg {
+            width: 20px;
+            height: 20px;
+
+            stroke-width: 2;
+        }
+
+        /* Unread count badge */
+
+        .notification-count {
+            position: absolute;
+
+            top: -5px;
+            right: -5px;
+
+            min-width: 18px;
+            height: 18px;
+
+            padding: 0 5px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 999px;
+
+            background: #ef4444;
+            color: #ffffff;
+
+            border: 2px solid #ffffff;
+
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+
+            box-shadow:
+                0 2px 6px rgba(239, 68, 68, 0.25);
+        }
+
+        .notification-count.hidden {
+            display: none;
+        }
+
+        /* =====================================================
+           NOTIFICATION DROPDOWN
+           ===================================================== */
+
+        .notification-dropdown {
+            position: absolute;
+
+            top: calc(100% + 12px);
+            right: 0;
+
+            width: 380px;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+
+            box-shadow:
+                0 18px 45px rgba(15, 23, 42, 0.14);
+
+            overflow: hidden;
+
+            z-index: 1000;
+
+            opacity: 0;
+            visibility: hidden;
+
+            transform:
+                translateY(-8px)
+                scale(0.98);
+
+            transform-origin: top right;
+
+            transition:
+                opacity 0.18s ease,
+                visibility 0.18s ease,
+                transform 0.18s ease;
+        }
+
+        .notification-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+
+            transform:
+                translateY(0)
+                scale(1);
+        }
+
+        /* Header */
+
+        .notification-header {
+            padding: 16px 18px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border-bottom: 1px solid #eef2f7;
+
+            background: #ffffff;
+        }
+
+        .notification-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-header-icon {
+            width: 34px;
+            height: 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .notification-header-icon svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .notification-header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .notification-header-title strong {
+            font-size: 14px;
+            font-weight: 700;
+
+            color: #0f172a;
+        }
+
+        .notification-header-title span {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .notification-mark-all {
+            border: none;
+
+            background: transparent;
+            color: #2563eb;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            padding: 6px 4px;
+
+            transition: color 0.2s ease;
+        }
+
+        .notification-mark-all:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        /* =====================================================
+           NOTIFICATION LIST
+           ===================================================== */
+
+        .notification-list {
+            max-height: 360px;
+
+            overflow-y: auto;
+        }
+
+        .notification-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .notification-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .notification-item {
+            position: relative;
+
+            display: flex;
+            gap: 12px;
+
+            padding: 14px 18px;
+
+            border-bottom: 1px solid #f1f5f9;
+
+            text-decoration: none;
+
+            transition:
+                background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8fafc;
+        }
+
+        .notification-item.unread {
+            background: #f8fbff;
+        }
+
+        .notification-item.unread:hover {
+            background: #f1f7ff;
+        }
+
+        .notification-icon {
+            flex-shrink: 0;
+
+            width: 34px;
+            height: 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .notification-item.unread
+        .notification-icon {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .notification-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .notification-content {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .notification-title {
+            margin: 0 0 3px;
+
+            font-size: 13px;
+            font-weight: 700;
+
+            color: #1e293b;
+        }
+
+        .notification-message {
+            margin: 0;
+
+            font-size: 12px;
+            line-height: 1.5;
+
+            color: #64748b;
+
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+
+            overflow: hidden;
+        }
+
+        .notification-time {
+            display: block;
+
+            margin-top: 5px;
+
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .notification-unread-dot {
+            flex-shrink: 0;
+
+            width: 7px;
+            height: 7px;
+
+            margin-top: 5px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+        }
+
+        /* =====================================================
+           EMPTY STATE
+           ===================================================== */
+
+        .notification-empty {
+            padding: 42px 20px;
+
+            text-align: center;
+        }
+
+        .notification-empty-icon {
+            width: 48px;
+            height: 48px;
+
+            margin: 0 auto 12px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .notification-empty-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .notification-empty strong {
+            display: block;
+
+            margin-bottom: 4px;
+
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .notification-empty span {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* =====================================================
+           DROPDOWN FOOTER
+           ===================================================== */
+
+        .notification-footer {
+            padding: 11px 16px;
+
+            border-top: 1px solid #eef2f7;
+
+            background: #ffffff;
+
+            text-align: center;
+        }
+
+        .notification-view-all {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 6px;
+
+            width: 100%;
+
+            padding: 8px 12px;
+
+            border-radius: 9px;
+
+            background: #f8fafc;
+
+            color: #475569;
+
+            text-decoration: none;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease;
+        }
+
+        .notification-view-all:hover {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .notification-view-all svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 600px) {
+
+            .notification-dropdown {
+                position: fixed;
+
+                top: 70px;
+                right: 12px;
+                left: 12px;
+
+                width: auto;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="app-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                QT
+            </div>
+
+            <div class="brand-text">
+
+                <strong>
+                    QT Platform
+                </strong>
+
+                <span>
+                    Training Management
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="sidebar-nav">
+
+
+            <!-- DASHBOARD -->
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="nav-item
+                {% if request.endpoint == 'dashboard' %}
+                    active
+                {% endif %}"
+            >
+
+                <i
+                    data-lucide="layout-dashboard"
+                ></i>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- =================================================
+                 SUPER ADMIN
+                 ================================================= -->
+
+            {% if user and user.role == "SUPER_ADMIN" %}
+
+
+                <div class="nav-section">
+                    MANAGEMENT
+                </div>
+
+
+                <!-- USER MANAGEMENT -->
+
+                <a
+                    href="{{ url_for('users') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'users',
+                        'create_user',
+                        'toggle_user',
+                        'delete_user'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="user-cog"
+                    ></i>
+
+                    <span>
+                        User Management
+                    </span>
+
+                </a>
+
+
+                <!-- TRAINERS -->
+
+                <a
+                    href="{{ url_for('trainers') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'trainers',
+                        'create_trainer',
+                        'edit_trainer',
+                        'toggle_trainer',
+                        'delete_trainer'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="users"
+                    ></i>
+
+                    <span>
+                        Trainers
+                    </span>
+
+                </a>
+
+
+                <!-- REQUIREMENTS -->
+
+                <a
+                    href="{{ url_for('requirements') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'requirements',
+                        'create_requirement',
+                        'view_requirement',
+                        'edit_requirement',
+                        'update_requirement_status',
+                        'delete_requirement'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="clipboard-list"
+                    ></i>
+
+                    <span>
+                        Requirements
+                    </span>
+
+                </a>
+
+
+                <!-- APPLICATIONS -->
+
+                <a
+                    href="{{ url_for('applications') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'applications',
+                        'create_application',
+                        'update_application_status'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="file-check-2"
+                    ></i>
+
+                    <span>
+                        Applications
+                    </span>
+
+                </a>
+
+
+                <!-- PROJECTS -->
+
+                <a
+                    href="{{ url_for('projects') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'projects',
+                        'create_project',
+                        'view_project',
+                        'edit_project',
+                        'update_project_status',
+                        'delete_project',
+                        'assign_trainer_to_project',
+                        'remove_trainer_from_project'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="folder-kanban"
+                    ></i>
+
+                    <span>
+                        Projects
+                    </span>
+
+                </a>
+
+
+                <div class="nav-section">
+                    OPERATIONS
+                </div>
+
+
+                <!-- SCHEDULE -->
+
+                <a
+                    href="{{ url_for('schedule') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'schedule',
+                        'create_schedule',
+                        'edit_schedule',
+                        'update_schedule_status',
+                        'delete_schedule'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="calendar-days"
+                    ></i>
+
+                    <span>
+                        Schedule
+                    </span>
+
+                </a>
+
+
+                <!-- ATTENDANCE -->
+
+                <!-- ATTENDANCE -->
+
+<a
+    href="{{ url_for('attendance') }}"
+    class="nav-item
+    {% if request.endpoint == 'attendance' %}
+        active
+    {% endif %}"
+>
+
+    <i
+        data-lucide="user-check"
+    ></i>
+
+    <span>
+        Attendance
+    </span>
+
+</a>
+
+
+            
+
+
+                <!-- PAYMENTS -->
+
+                <a
+    href="{{ url_for('payments') }}"
+    class="nav-item
+    {% if request.endpoint == 'payments' %}
+        active
+    {% endif %}"
+>
+    <i data-lucide="credit-card"></i>
+    <span>Payments</span>
+</a>
+
+
+                <!-- DOCUMENTS -->
+
+                <a
+    href="{{ url_for('documents') }}"
+    class="nav-item
+    {% if request.endpoint == 'documents' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="files"></i>
+
+    <span>
+        Documents
+    </span>
+
+</a>
+
+                <!-- COMMUNICATION -->
+
+                <a
+    href="{{ url_for('communication') }}"
+    class="nav-item
+    {% if request.endpoint == 'communication' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="messages-square"></i>
+
+    <span>
+        Communication
+    </span>
+
+</a>
+
+
+                <div class="nav-section">
+                    INTELLIGENCE
+                </div>
+
+
+                <!-- AI ASSISTANT -->
+
+                <a
+                    href="#"
+                    class="nav-item"
+                >
+
+                    <i
+                        data-lucide="bot"
+                    ></i>
+
+                    <span>
+                        AI Assistant
+                    </span>
+
+                </a>
+
+
+                <!-- REPORTS -->
+
+                <a
+                    href="#"
+                    class="nav-item"
+                >
+
+                    <i
+                        data-lucide="chart-no-axes-combined"
+                    ></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <div class="nav-section">
+                    SYSTEM
+                </div>
+
+
+                <!-- NOTIFICATIONS -->
+
+                <a
+                    href="{{ url_for('notifications') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'notifications',
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="bell-ring"
+                    ></i>
+
+                    <span>
+                        Notifications
+                    </span>
+
+                    {% if unread_notification_count > 0 %}
+
+                        <span
+                            style="
+                                margin-left:auto;
+                                min-width:18px;
+                                height:18px;
+                                padding:0 5px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                border-radius:999px;
+                                background:#ef4444;
+                                color:#ffffff;
+                                font-size:10px;
+                                font-weight:700;
+                            "
+                        >
+                            {{ unread_notification_count }}
+                        </span>
+
+                    {% endif %}
+
+                </a>
+
+
+                <!-- SETTINGS -->
+
+                 <a
+    href="{{ url_for('settings') }}"
+    class="nav-item
+    {% if request.endpoint == 'settings' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="settings"></i>
+
+    <span>
+        Settings
+    </span>
+
+</a>
+
+
+            <!-- =================================================
+                 VENDOR
+                 ================================================= -->
+
+            {% elif user and user.role == "VENDOR" %}
+
+
+                <div class="nav-section">
+                    MANAGEMENT
+                </div>
+
+
+                <!-- TRAINERS -->
+
+                <a
+                    href="{{ url_for('trainers') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'trainers',
+                        'create_trainer',
+                        'edit_trainer'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="users"
+                    ></i>
+
+                    <span>
+                        Trainers
+                    </span>
+
+                </a>
+
+
+                <!-- REQUIREMENTS -->
+
+                <a
+                    href="{{ url_for('requirements') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'requirements',
+                        'create_requirement',
+                        'view_requirement',
+                        'edit_requirement',
+                        'update_requirement_status',
+                        'delete_requirement'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="clipboard-list"
+                    ></i>
+
+                    <span>
+                        Requirements
+                    </span>
+
+                </a>
+
+
+                <!-- APPLICATIONS -->
+
+                <a
+                    href="{{ url_for('applications') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'applications',
+                        'create_application',
+                        'update_application_status'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="file-check-2"
+                    ></i>
+
+                    <span>
+                        Applications
+                    </span>
+
+                </a>
+
+
+                <!-- PROJECTS -->
+
+                <a
+                    href="{{ url_for('projects') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'projects',
+                        'create_project',
+                        'view_project',
+                        'edit_project',
+                        'update_project_status',
+                        'delete_project',
+                        'assign_trainer_to_project',
+                        'remove_trainer_from_project'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="folder-kanban"
+                    ></i>
+
+                    <span>
+                        Projects
+                    </span>
+
+                </a>
+
+
+                <div class="nav-section">
+                    OPERATIONS
+                </div>
+
+
+                <!-- SCHEDULE -->
+
+                <a
+                    href="{{ url_for('schedule') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'schedule',
+                        'create_schedule',
+                        'edit_schedule',
+                        'update_schedule_status',
+                        'delete_schedule'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="calendar-days"
+                    ></i>
+
+                    <span>
+                        Schedule
+                    </span>
+
+                </a>
+
+
+                <!-- ATTENDANCE -->
+
+               <!-- ATTENDANCE -->
+
+<a
+    href="{{ url_for('attendance') }}"
+    class="nav-item
+    {% if request.endpoint == 'attendance' %}
+        active
+    {% endif %}"
+>
+
+    <i
+        data-lucide="user-check"
+    ></i>
+
+    <span>
+        Attendance
+    </span>
+
+</a>
+
+
+               
+
+
+                <!-- PAYMENTS -->
+
+                <a
+    href="{{ url_for('payments') }}"
+    class="nav-item
+    {% if request.endpoint == 'payments' %}
+        active
+    {% endif %}"
+>
+    <i data-lucide="credit-card"></i>
+    <span>Payments</span>
+</a>
+
+
+                <!-- DOCUMENTS -->
+
+                <a
+    href="{{ url_for('documents') }}"
+    class="nav-item
+    {% if request.endpoint == 'documents' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="files"></i>
+
+    <span>
+        Documents
+    </span>
+
+</a>
+
+
+                <!-- COMMUNICATION -->
+
+               <a
+    href="{{ url_for('communication') }}"
+    class="nav-item
+    {% if request.endpoint == 'communication' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="messages-square"></i>
+
+    <span>
+        Communication
+    </span>
+
+</a>
+
+
+                <div class="nav-section">
+                    INTELLIGENCE
+                </div>
+
+
+                <!-- AI ASSISTANT -->
+
+                <a
+                    href="#"
+                    class="nav-item"
+                >
+
+                    <i
+                        data-lucide="bot"
+                    ></i>
+
+                    <span>
+                        AI Assistant
+                    </span>
+
+                </a>
+
+
+                <!-- REPORTS -->
+
+                <a
+                    href="#"
+                    class="nav-item"
+                >
+
+                    <i
+                        data-lucide="chart-no-axes-combined"
+                    ></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <div class="nav-section">
+                    SYSTEM
+                </div>
+
+
+                <!-- NOTIFICATIONS -->
+
+                <a
+                    href="{{ url_for('notifications') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'notifications',
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="bell-ring"
+                    ></i>
+
+                    <span>
+                        Notifications
+                    </span>
+
+                    {% if unread_notification_count > 0 %}
+
+                        <span
+                            style="
+                                margin-left:auto;
+                                min-width:18px;
+                                height:18px;
+                                padding:0 5px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                border-radius:999px;
+                                background:#ef4444;
+                                color:#ffffff;
+                                font-size:10px;
+                                font-weight:700;
+                            "
+                        >
+                            {{ unread_notification_count }}
+                        </span>
+
+                    {% endif %}
+
+                </a>
+
+
+            <!-- =================================================
+                 TRAINER
+                 ================================================= -->
+
+            {% elif user and user.role == "TRAINER" %}
+
+
+                <div class="nav-section">
+                    MY WORK
+                </div>
+
+
+                <!-- APPLICATIONS -->
+
+                <a
+                    href="{{ url_for('applications') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'applications',
+                        'update_application_status'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="file-check-2"
+                    ></i>
+
+                    <span>
+                        Applications
+                    </span>
+
+                </a>
+
+
+                <!-- MY ASSIGNMENTS -->
+
+                <a
+                    href="#"
+                    class="nav-item"
+                >
+
+                    <i
+                        data-lucide="briefcase-business"
+                    ></i>
+
+                    <span>
+                        My Assignments
+                    </span>
+
+                </a>
+
+
+                <!-- MY SCHEDULE -->
+
+                <a
+                    href="{{ url_for('schedule') }}"
+                    class="nav-item
+                    {% if request.endpoint == 'schedule' %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="calendar-days"
+                    ></i>
+
+                    <span>
+                        My Schedule
+                    </span>
+
+                </a>
+
+
+                <!-- ATTENDANCE -->
+
+               <!-- ATTENDANCE -->
+
+<a
+    href="{{ url_for('attendance') }}"
+    class="nav-item
+    {% if request.endpoint == 'attendance' %}
+        active
+    {% endif %}"
+>
+
+    <i
+        data-lucide="user-check"
+    ></i>
+
+    <span>
+        Attendance
+    </span>
+
+</a>
+
+
+
+                <!-- DOCUMENTS -->
+
+                <a
+    href="{{ url_for('documents') }}"
+    class="nav-item
+    {% if request.endpoint == 'documents' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="files"></i>
+
+    <span>
+        Documents
+    </span>
+
+</a>
+                <!-- PAYMENTS -->
+
+                <a
+    href="{{ url_for('payments') }}"
+    class="nav-item
+    {% if request.endpoint == 'payments' %}
+        active
+    {% endif %}"
+>
+    <i data-lucide="credit-card"></i>
+    <span>Payments</span>
+</a>
+<!-- COMMUNICATION -->
+
+<a
+    href="{{ url_for('communication') }}"
+    class="nav-item
+    {% if request.endpoint == 'communication' %}
+        active
+    {% endif %}"
+>
+
+    <i data-lucide="messages-square"></i>
+
+    <span>
+        Communication
+    </span>
+
+</a>
+
+
+                <!-- NOTIFICATIONS -->
+
+                <a
+                    href="{{ url_for('notifications') }}"
+                    class="nav-item
+                    {% if request.endpoint in [
+                        'notifications',
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i
+                        data-lucide="bell-ring"
+                    ></i>
+
+                    <span>
+                        Notifications
+                    </span>
+
+                    {% if unread_notification_count > 0 %}
+
+                        <span
+                            style="
+                                margin-left:auto;
+                                min-width:18px;
+                                height:18px;
+                                padding:0 5px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                border-radius:999px;
+                                background:#ef4444;
+                                color:#ffffff;
+                                font-size:10px;
+                                font-weight:700;
+                            "
+                        >
+                            {{ unread_notification_count }}
+                        </span>
+
+                    {% endif %}
+
+                </a>
+
+
+                <!-- PROFILE -->
+
+                <a
+                    href="#"
+                    class="nav-item"
+                >
+
+                    <i
+                        data-lucide="user-round"
+                    ></i>
+
+                    <span>
+                        Profile
+                    </span>
+
+                </a>
+
+
+            {% endif %}
+
+
+        </nav>
+
+
+        <!-- SIDEBAR FOOTER -->
+
+        <div class="sidebar-footer">
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="logout-link"
+            >
+
+                <i
+                    data-lucide="log-out"
+                ></i>
+
+                <span>
+                    Logout
+                </span>
+
+            </a>
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN AREA
+         ===================================================== -->
+
+    <div class="main-area">
+
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+
+            <div class="topbar-left">
+
+                <h2>
+
+                    {% block page_title %}
+                        Dashboard
+                    {% endblock %}
+
+                </h2>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+
+                <!-- =================================================
+                     NOTIFICATION WRAPPER
+                     ================================================= -->
+
+                <div
+                    class="notification-wrapper"
+                    id="notificationWrapper"
+                >
+
+
+                    <!-- BELL BUTTON -->
+
+                    <button
+                        class="notification-button"
+                        id="notificationButton"
+                        type="button"
+                        aria-label="Notifications"
+                        aria-expanded="false"
+                        aria-controls="notificationDropdown"
+                    >
+
+                        <i
+                            data-lucide="bell-ring"
+                        ></i>
+
+
+                        {% if unread_notification_count > 0 %}
+
+                            <span
+                                class="notification-count"
+                                id="notificationCount"
+                            >
+
+                                {% if unread_notification_count > 99 %}
+                                    99+
+                                {% else %}
+                                    {{ unread_notification_count }}
+                                {% endif %}
+
+                            </span>
+
+                        {% else %}
+
+                            <span
+                                class="notification-count hidden"
+                                id="notificationCount"
+                            >
+                            </span>
+
+                        {% endif %}
+
+                    </button>
+
+
+                    <!-- =================================================
+                         NOTIFICATION DROPDOWN
+                         ================================================= -->
+
+                    <div
+                        class="notification-dropdown"
+                        id="notificationDropdown"
+                    >
+
+
+                        <!-- HEADER -->
+
+                        <div
+                            class="notification-header"
+                        >
+
+                            <div
+                                class="notification-header-left"
+                            >
+
+                                <div
+                                    class="notification-header-icon"
+                                >
+
+                                    <i
+                                        data-lucide="bell-ring"
+                                    ></i>
+
+                                </div>
+
+
+                                <div
+                                    class="notification-header-title"
+                                >
+
+                                    <strong>
+                                        Notifications
+                                    </strong>
+
+                                    <span>
+
+                                        {% if unread_notification_count > 0 %}
+
+                                            {{ unread_notification_count }}
+                                            unread notification{% if unread_notification_count != 1 %}s{% endif %}
+
+                                        {% else %}
+
+                                            You're all caught up
+
+                                        {% endif %}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {% if unread_notification_count > 0 %}
+
+                                <form
+    method="POST"
+    action="{{ url_for('notifications') }}"
+    style="margin:0;"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token }}"
+    >
+
+    <input
+        type="hidden"
+        name="action"
+        value="read-all"
+    >
+
+    <button
+        type="submit"
+        class="notification-mark-all"
+    >
+        Mark all as read
+    </button>
+</form>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- =================================================
+                             NOTIFICATION LIST
+                             ================================================= -->
+
+                        <div
+                            class="notification-list"
+                        >
+
+
+                            {% if recent_notifications %}
+
+
+                                {% for notification in recent_notifications %}
+
+                                    <div
+                                        class="notification-item
+                                        {% if not notification.is_read %}
+                                            unread
+                                        {% endif %}"
+                                    >
+
+
+                                        <!-- ICON -->
+
+                                        <div
+                                            class="notification-icon"
+                                        >
+
+                                            {% if notification.notification_type == "APPLICATION" %}
+
+                                                <i
+                                                    data-lucide="file-check-2"
+                                                ></i>
+
+                                            {% elif notification.notification_type == "PROJECT" %}
+
+                                                <i
+                                                    data-lucide="folder-kanban"
+                                                ></i>
+
+                                            {% elif notification.notification_type == "SCHEDULE" %}
+
+                                                <i
+                                                    data-lucide="calendar-days"
+                                                ></i>
+
+                                            {% elif notification.notification_type == "PAYMENT" %}
+
+                                                <i
+                                                    data-lucide="credit-card"
+                                                ></i>
+
+                                            {% elif notification.notification_type == "SYSTEM" %}
+
+                                                <i
+                                                    data-lucide="info"
+                                                ></i>
+
+                                            {% else %}
+
+                                                <i
+                                                    data-lucide="bell"
+                                                ></i>
+
+                                            {% endif %}
+
+                                        </div>
+
+
+                                        <!-- CONTENT -->
+
+                                        <div
+                                            class="notification-content"
+                                        >
+
+                                            <p
+                                                class="notification-title"
+                                            >
+
+                                                {{ notification.title }}
+
+                                            </p>
+
+
+                                            <p
+                                                class="notification-message"
+                                            >
+
+                                                {{ notification.message }}
+
+                                            </p>
+
+
+                                            <span
+                                                class="notification-time"
+                                            >
+
+{{ (notification.created_at + timedelta(hours=5, minutes=30)).strftime('%d %b %Y, %I:%M %p') if notification.created_at else '' }}
+                                            </span>
+
+                                        </div>
+
+
+                                        <!-- UNREAD DOT -->
+
+                                        {% if not notification.is_read %}
+
+                                            <span
+                                                class="notification-unread-dot"
+                                                title="Unread"
+                                            ></span>
+
+                                        {% endif %}
+
+
+                                    </div>
+
+                                {% endfor %}
+
+
+                            {% else %}
+
+
+                                <!-- EMPTY STATE -->
+
+                                <div
+                                    class="notification-empty"
+                                >
+
+                                    <div
+                                        class="notification-empty-icon"
+                                    >
+
+                                        <i
+                                            data-lucide="bell-off"
+                                        ></i>
+
+                                    </div>
+
+
+                                    <strong>
+                                        No notifications
+                                    </strong>
+
+                                    <span>
+                                        You're all caught up.
+                                    </span>
+
+                                </div>
+
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                        <!-- FOOTER -->
+
+                        <div
+                            class="notification-footer"
+                        >
+
+                            <a
+                                href="{{ url_for('notifications') }}"
+                                class="notification-view-all"
+                            >
+
+                                <span>
+                                    View all notifications
+                                </span>
+
+                                <i
+                                    data-lucide="arrow-right"
+                                ></i>
+
+                            </a>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     USER INFO
+                     ================================================= -->
+
+                {% if user %}
+
+                    <div
+                        class="user-info"
+                    >
+
+                        <div
+                            class="user-avatar"
+                        >
+
+                            {{ user.full_name[0] | upper }}
+
+                        </div>
+
+
+                        <div
+                            class="user-details"
+                        >
+
+                            <strong>
+                                {{ user.full_name }}
+                            </strong>
+
+                            <span>
+                                {{ user.role }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+
+            </div>
+
+        </header>
+
+
+        <!-- =====================================================
+             PAGE CONTENT
+             ===================================================== -->
+
+        <main class="content">
+
+            {% block content %}{% endblock %}
+
+        </main>
+
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ICON INITIALIZATION + NOTIFICATION DROPDOWN
+     ===================================================== -->
+
+<script>
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            /*
+             * Initialize Lucide icons
+             */
+
+            if (window.lucide) {
+
+                lucide.createIcons();
+
+            }
+
+
+            /*
+             * Notification elements
+             */
+
+            const notificationButton =
+                document.getElementById(
+                    "notificationButton"
+                );
+
+            const notificationDropdown =
+                document.getElementById(
+                    "notificationDropdown"
+                );
+
+            const notificationWrapper =
+                document.getElementById(
+                    "notificationWrapper"
+                );
+
+
+            /*
+             * Stop if notification UI
+             * does not exist.
+             */
+
+            if (
+                !notificationButton ||
+                !notificationDropdown ||
+                !notificationWrapper
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+             * Open / Close notification dropdown
+             */
+
+            notificationButton.addEventListener(
+                "click",
+                function (event) {
+
+                    event.stopPropagation();
+
+                    const isOpen =
+                        notificationDropdown.classList.contains(
+                            "show"
+                        );
+
+
+                    if (isOpen) {
+
+                        notificationDropdown.classList.remove(
+                            "show"
+                        );
+
+                        notificationButton.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+
+                    } else {
+
+                        notificationDropdown.classList.add(
+                            "show"
+                        );
+
+                        notificationButton.setAttribute(
+                            "aria-expanded",
+                            "true"
+                        );
+
+                    }
+
+                }
+            );
+
+
+            /*
+             * Prevent dropdown click from
+             * immediately closing itself.
+             */
+
+            notificationDropdown.addEventListener(
+                "click",
+                function (event) {
+
+                    event.stopPropagation();
+
+                }
+            );
+
+
+            /*
+             * Close when clicking outside.
+             */
+
+            document.addEventListener(
+                "click",
+                function () {
+
+                    notificationDropdown.classList.remove(
+                        "show"
+                    );
+
+                    notificationButton.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+                }
+            );
+
+
+            /*
+             * Close with Escape key.
+             */
+
+            document.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key === "Escape") {
+
+                        notificationDropdown.classList.remove(
+                            "show"
+                        );
+
+                        notificationButton.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+
+                        notificationButton.blur();
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+</script>
+
+
+{% block js %}{% endblock %}
+
+
+</body>
+
+</html>

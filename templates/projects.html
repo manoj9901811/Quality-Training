@@ -1,0 +1,2328 @@
+{% extends "base.html" %}
+
+{% block title %}
+Project Management - QT Platform
+{% endblock %}
+
+{% block page_title %}
+Project Management
+{% endblock %}
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/projects.css') }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="projects-page">
+
+    <!-- =========================================================
+         BACKGROUND DECORATION
+    ========================================================== -->
+
+    <div
+        class="projects-background"
+        aria-hidden="true"
+    >
+        <div class="background-dots"></div>
+
+        <div class="background-circle circle-one"></div>
+        <div class="background-circle circle-two"></div>
+        <div class="background-circle circle-three"></div>
+
+        <div class="background-glow"></div>
+    </div>
+
+
+    <!-- =========================================================
+         PAGE HEADER
+    ========================================================== -->
+
+    <div class="page-header">
+
+        <div class="page-breadcrumb">
+
+            <span>Dashboard</span>
+
+            <i data-lucide="chevron-right"></i>
+
+            <strong>Project Management</strong>
+
+        </div>
+
+
+        <div class="page-title-row">
+
+            <div>
+
+                <h1>
+                    Project Management
+                </h1>
+
+                <p>
+                    Manage training projects, timelines, budgets and project status.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                id="openCreateProjectBtn"
+            >
+
+                <i data-lucide="plus"></i>
+
+                <span>
+                    Add Project
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+    ========================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="messages">
+
+                {% for category, message in messages %}
+
+                    <div class="message {{ category }}">
+
+                        {% if category == "success" %}
+
+                            <i data-lucide="circle-check"></i>
+
+                        {% elif category == "warning" %}
+
+                            <i data-lucide="triangle-alert"></i>
+
+                        {% else %}
+
+                            <i data-lucide="circle-alert"></i>
+
+                        {% endif %}
+
+                        <span>
+                            {{ message }}
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         STATISTICS
+    ========================================================== -->
+
+    <div class="project-stats">
+
+
+        <!-- TOTAL -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon stat-icon-blue">
+
+                <i data-lucide="folder-kanban"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Total Projects
+                </span>
+
+                <strong>
+                    {{ total_projects }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag">
+                Current
+            </span>
+
+        </div>
+
+
+        <!-- ACTIVE -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon stat-icon-green">
+
+                <i data-lucide="activity"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Active Projects
+                </span>
+
+                <strong>
+                    {{ active_projects }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag">
+                Active
+            </span>
+
+        </div>
+
+
+        <!-- PLANNING -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon stat-icon-orange">
+
+                <i data-lucide="clipboard-list"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Planning
+                </span>
+
+                <strong>
+                    {{ planning_projects }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag">
+                Pending
+            </span>
+
+        </div>
+
+
+        <!-- COMPLETED -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon stat-icon-purple">
+
+                <i data-lucide="circle-check"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Completed
+                </span>
+
+                <strong>
+                    {{ completed_projects }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag">
+                Done
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =========================================================
+         PROJECTS CARD
+    ========================================================== -->
+
+    <section class="projects-card">
+
+
+        <!-- CARD HEADER -->
+
+        <div class="projects-card-header">
+
+            <div class="card-heading">
+
+                <div class="card-heading-icon">
+
+                    <i data-lucide="folder-kanban"></i>
+
+                </div>
+
+                <div>
+
+                    <h2>
+                        Platform Projects
+                    </h2>
+
+                    <p>
+                        View and manage all training projects.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="projects-toolbar">
+
+
+                <!-- SEARCH -->
+
+                <div class="search-box">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="search"
+                        id="projectSearch"
+                        placeholder="Search projects by name, client or skill..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- FILTER -->
+
+                <div class="filter-box">
+
+                    <select
+                        id="projectStatusFilter"
+                        aria-label="Filter projects by status"
+                    >
+
+                        <option value="ALL">
+                            All Status
+                        </option>
+
+                        <option value="PLANNING">
+                            Planning
+                        </option>
+
+                        <option value="ACTIVE">
+                            Active
+                        </option>
+
+                        <option value="COMPLETED">
+                            Completed
+                        </option>
+
+                        <option value="CANCELLED">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                    <i data-lucide="chevron-down"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             TABLE
+        ====================================================== -->
+
+        <div class="table-wrapper">
+
+            <table class="projects-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Project
+                        </th>
+
+                        <th>
+                            Client
+                        </th>
+
+                        <th>
+                            Skill
+                        </th>
+
+                        <th>
+                            Timeline
+                        </th>
+
+                        <th>
+                            Budget
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th class="actions-column">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="projectsTableBody">
+
+
+                {% if projects %}
+
+
+                    {% for project in projects %}
+
+
+                    <tr
+                        class="project-row"
+                        data-project-id="{{ project.id }}"
+                        data-search="
+                            {{ project.project_code }}
+                            {{ project.project_name }}
+                            {{ project.client_name }}
+                            {{ project.skill }}
+                            {{ project.location or '' }}
+                            {{ project.requirement.requirement_code if project.requirement else '' }}
+                            {{ project.status }}
+                        "
+                        data-status="{{ project.status }}"
+                    >
+
+
+                        <!-- PROJECT -->
+
+                        <td>
+
+                            <div class="project-info">
+
+                                <div class="project-avatar">
+
+                                    <i data-lucide="folder"></i>
+
+                                </div>
+
+
+                                <div class="project-details">
+
+                                    <strong>
+                                        {{ project.project_name }}
+                                    </strong>
+
+                                    <span>
+                                        {{ project.project_code }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- CLIENT -->
+
+                        <td>
+
+                            <span class="table-primary">
+
+                                {{ project.client_name }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- SKILL -->
+
+                        <td>
+
+                            <span class="skill-badge">
+
+                                {{ project.skill }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- TIMELINE -->
+
+                        <td>
+
+                            <div class="timeline-info">
+
+                                <div class="timeline-date">
+
+                                    {% if project.start_date %}
+
+                                        {{ project.start_date.strftime('%d %b %Y') }}
+
+                                    {% else %}
+
+                                        No start date
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <i data-lucide="arrow-right"></i>
+
+
+                                <div class="timeline-date">
+
+                                    {% if project.end_date %}
+
+                                        {{ project.end_date.strftime('%d %b %Y') }}
+
+                                    {% else %}
+
+                                        Ongoing
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- BUDGET -->
+
+                        <td>
+
+                            <span class="budget-value">
+
+                                ₹{{ "{:,.2f}".format(project.budget or 0) }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if project.status == "PLANNING" %}
+
+                                <span class="status-badge status-planning">
+
+                                    <span class="status-dot"></span>
+
+                                    Planning
+
+                                </span>
+
+
+                            {% elif project.status == "ACTIVE" %}
+
+                                <span class="status-badge status-active">
+
+                                    <span class="status-dot"></span>
+
+                                    Active
+
+                                </span>
+
+
+                            {% elif project.status == "COMPLETED" %}
+
+                                <span class="status-badge status-completed">
+
+                                    <span class="status-dot"></span>
+
+                                    Completed
+
+                                </span>
+
+
+                            {% elif project.status == "CANCELLED" %}
+
+                                <span class="status-badge status-cancelled">
+
+                                    <span class="status-dot"></span>
+
+                                    Cancelled
+
+                                </span>
+
+
+                            {% else %}
+
+                                <span class="status-badge">
+
+                                    {{ project.status }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="table-actions">
+
+
+                                <!-- VIEW -->
+
+                                <button
+                                    type="button"
+                                    class="icon-btn view-project-btn"
+                                    data-project-id="{{ project.id }}"
+                                    title="View Project"
+                                    aria-label="View Project"
+                                >
+
+                                    <i data-lucide="eye"></i>
+
+                                </button>
+
+
+                                <!-- EDIT -->
+
+                                <button
+                                    type="button"
+                                    class="icon-btn edit-project-btn"
+                                    data-project-id="{{ project.id }}"
+                                    title="Edit Project"
+                                    aria-label="Edit Project"
+                                >
+
+                                    <i data-lucide="pencil"></i>
+
+                                </button>
+
+
+                                <!-- TRAINERS -->
+
+                                {% if user and user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                                    <button
+                                        type="button"
+                                        class="icon-btn trainer-project-btn"
+                                        data-project-id="{{ project.id }}"
+                                        title="Manage Trainers"
+                                        aria-label="Manage Trainers"
+                                    >
+
+                                        <i data-lucide="users"></i>
+
+                                    </button>
+
+                                {% endif %}
+
+
+                                <!-- STATUS -->
+
+                                <button
+                                    type="button"
+                                    class="icon-btn status-project-btn"
+                                    data-project-id="{{ project.id }}"
+                                    title="Change Status"
+                                    aria-label="Change Status"
+                                >
+
+                                    <i data-lucide="refresh-cw"></i>
+
+                                </button>
+
+
+                                {% if user and user.role == "SUPER_ADMIN" %}
+
+                                    <!-- DELETE -->
+
+                                    <button
+                                        type="button"
+                                        class="icon-btn icon-btn-danger delete-project-btn"
+                                        data-project-id="{{ project.id }}"
+                                        title="Delete Project"
+                                        aria-label="Delete Project"
+                                    >
+
+                                        <i data-lucide="trash-2"></i>
+
+                                    </button>
+
+                                {% endif %}
+
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <tr id="emptyProjectsRow">
+
+                        <td
+                            colspan="7"
+                            class="empty-state"
+                        >
+
+                            <div class="empty-state-icon">
+
+                                <i data-lucide="folder-open"></i>
+
+                            </div>
+
+                            <h3>
+                                No projects found
+                            </h3>
+
+                            <p>
+                                Create your first project to get started.
+                            </p>
+
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                id="emptyCreateProjectBtn"
+                            >
+
+                                <i data-lucide="plus"></i>
+
+                                Add Project
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+
+                {% endif %}
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- NO SEARCH RESULTS -->
+
+        <div
+            class="no-search-results"
+            id="noProjectSearchResults"
+            hidden
+        >
+
+            <div class="no-results-icon">
+
+                <i data-lucide="search-x"></i>
+
+            </div>
+
+            <strong>
+                No matching projects
+            </strong>
+
+            <span>
+                Try a different search or status filter.
+            </span>
+
+        </div>
+
+
+        <!-- =====================================================
+             PAGINATION
+        ====================================================== -->
+
+        <div class="projects-pagination">
+
+            <div class="pagination-info">
+
+                Showing
+
+                <strong id="visibleProjectCount">
+                    {{ projects|length }}
+                </strong>
+
+                projects
+
+            </div>
+
+
+            <div class="pagination-buttons">
+
+                <button
+                    type="button"
+                    class="pagination-btn"
+                    id="projectPrevPage"
+                    disabled
+                    aria-label="Previous page"
+                >
+
+                    <i data-lucide="chevron-left"></i>
+
+                </button>
+
+
+                <span
+                    class="pagination-current"
+                    id="projectCurrentPage"
+                >
+                    1
+                </span>
+
+
+                <button
+                    type="button"
+                    class="pagination-btn"
+                    id="projectNextPage"
+                    disabled
+                    aria-label="Next page"
+                >
+
+                    <i data-lucide="chevron-right"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+
+<!-- =========================================================
+     CREATE PROJECT MODAL
+========================================================== -->
+
+<div
+    class="modal-overlay"
+    id="createProjectModal"
+    aria-hidden="true"
+    hidden
+>
+
+    <div
+        class="modal modal-large"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="createProjectTitle"
+    >
+
+        <div class="modal-header">
+
+            <div class="modal-heading">
+
+                <div class="modal-title-icon">
+
+                    <i data-lucide="folder-plus"></i>
+
+                </div>
+
+                <div>
+
+                    <h2 id="createProjectTitle">
+                        Create Project
+                    </h2>
+
+                    <p>
+                        Create a new training project from a requirement.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="createProjectModal"
+                aria-label="Close"
+            >
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('create_project') }}"
+            id="createProjectForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <div class="modal-body">
+
+                <div class="form-section">
+
+                    <div class="form-section-title">
+                        Project Information
+                    </div>
+
+
+                    <div class="form-grid">
+
+
+                        <!-- PROJECT NAME -->
+
+                        <div class="form-group form-group-full">
+
+                            <label for="createProjectName">
+
+                                Project Name
+
+                                <span>*</span>
+
+                            </label>
+
+                            <input
+                                type="text"
+                                id="createProjectName"
+                                name="project_name"
+                                maxlength="200"
+                                required
+                                placeholder="Enter project name"
+                            >
+
+                        </div>
+
+
+                        <!-- REQUIREMENT -->
+
+                        <div class="form-group form-group-full">
+
+                            <label for="createRequirement">
+
+                                Source Requirement
+
+                                <span>*</span>
+
+                            </label>
+
+                            <select
+                                id="createRequirement"
+                                name="requirement_id"
+                                required
+                            >
+
+                                <option value="">
+                                    Select a requirement
+                                </option>
+
+
+                                {% for requirement in requirements %}
+
+                                    <option
+                                        value="{{ requirement.id }}"
+                                        data-client="{{ requirement.client_name }}"
+                                        data-skill="{{ requirement.skill }}"
+                                        data-location="{{ requirement.location or '' }}"
+                                        data-budget="{{ requirement.budget or 0 }}"
+                                        data-start-date="{{ requirement.start_date.isoformat() if requirement.start_date else '' }}"
+                                    >
+
+                                        {{ requirement.requirement_code }}
+                                        — {{ requirement.title }}
+
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+
+                            {% if requirements %}
+
+                                <small>
+                                    Client, skill, budget and start date are taken from the requirement.
+                                </small>
+
+                            {% else %}
+
+                                <small class="warning-help">
+                                    No open requirements are currently available.
+                                </small>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- CLIENT -->
+
+                        <div class="form-group">
+
+                            <label for="createClient">
+                                Client
+                            </label>
+
+                            <input
+                                type="text"
+                                id="createClient"
+                                readonly
+                                placeholder="Auto-filled"
+                            >
+
+                        </div>
+
+
+                        <!-- SKILL -->
+
+                        <div class="form-group">
+
+                            <label for="createSkill">
+                                Skill
+                            </label>
+
+                            <input
+                                type="text"
+                                id="createSkill"
+                                readonly
+                                placeholder="Auto-filled"
+                            >
+
+                        </div>
+
+
+                        <!-- LOCATION -->
+
+                        <div class="form-group">
+
+                            <label for="createLocation">
+                                Location
+                            </label>
+
+                            <input
+                                type="text"
+                                id="createLocation"
+                                name="location"
+                                maxlength="150"
+                                placeholder="Training location"
+                            >
+
+                        </div>
+
+
+                        <!-- BUDGET -->
+
+                        <div class="form-group">
+
+                            <label for="createBudget">
+                                Budget
+                            </label>
+
+                            <div class="input-prefix">
+
+                                <span>₹</span>
+
+                                <input
+                                    type="number"
+                                    id="createBudget"
+                                    name="budget"
+                                    min="0"
+                                    step="0.01"
+                                    value="0"
+                                    placeholder="0.00"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- START DATE -->
+
+                        <div class="form-group">
+
+                            <label for="createStartDate">
+                                Start Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="createStartDate"
+                                name="start_date"
+                            >
+
+                        </div>
+
+
+                        <!-- END DATE -->
+
+                        <div class="form-group">
+
+                            <label for="createEndDate">
+                                End Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="createEndDate"
+                                name="end_date"
+                            >
+
+                        </div>
+
+
+                        <!-- NOTES -->
+
+                        <div class="form-group form-group-full">
+
+                            <label for="createNotes">
+                                Notes
+                            </label>
+
+                            <textarea
+                                id="createNotes"
+                                name="notes"
+                                rows="4"
+                                maxlength="5000"
+                                placeholder="Add project notes..."
+                            ></textarea>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-close-modal="createProjectModal"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    {% if not requirements %}disabled{% endif %}
+                >
+
+                    <i data-lucide="plus"></i>
+
+                    Create Project
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     EDIT PROJECT MODAL
+========================================================== -->
+
+<div
+    class="modal-overlay"
+    id="editProjectModal"
+    aria-hidden="true"
+    hidden
+>
+
+    <div
+        class="modal modal-large"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="editProjectTitle"
+    >
+
+        <div class="modal-header">
+
+            <div class="modal-heading">
+
+                <div class="modal-title-icon">
+
+                    <i data-lucide="pencil"></i>
+
+                </div>
+
+                <div>
+
+                    <h2 id="editProjectTitle">
+                        Edit Project
+                    </h2>
+
+                    <p>
+                        Update project details.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="editProjectModal"
+                aria-label="Close"
+            >
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            id="editProjectForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <div class="modal-body">
+
+                <div class="form-grid">
+
+
+                    <!-- PROJECT NAME -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="editProjectName">
+
+                            Project Name
+
+                            <span>*</span>
+
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editProjectName"
+                            name="project_name"
+                            maxlength="200"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- CODE -->
+
+                    <div class="form-group">
+
+                        <label for="editProjectCode">
+                            Project Code
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editProjectCode"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <!-- REQUIREMENT -->
+
+                    <div class="form-group">
+
+                        <label for="editProjectRequirement">
+                            Requirement
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editProjectRequirement"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <!-- CLIENT -->
+
+                    <div class="form-group">
+
+                        <label for="editClient">
+                            Client
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editClient"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <!-- SKILL -->
+
+                    <div class="form-group">
+
+                        <label for="editSkill">
+                            Skill
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editSkill"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <!-- LOCATION -->
+
+                    <div class="form-group">
+
+                        <label for="editLocation">
+                            Location
+                        </label>
+
+                        <input
+                            type="text"
+                            id="editLocation"
+                            name="location"
+                            maxlength="150"
+                        >
+
+                    </div>
+
+
+                    <!-- BUDGET -->
+
+                    <div class="form-group">
+
+                        <label for="editBudget">
+                            Budget
+                        </label>
+
+                        <div class="input-prefix">
+
+                            <span>₹</span>
+
+                            <input
+                                type="number"
+                                id="editBudget"
+                                name="budget"
+                                min="0"
+                                step="0.01"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- START DATE -->
+
+                    <div class="form-group">
+
+                        <label for="editStartDate">
+                            Start Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="editStartDate"
+                            name="start_date"
+                        >
+
+                    </div>
+
+
+                    <!-- END DATE -->
+
+                    <div class="form-group">
+
+                        <label for="editEndDate">
+                            End Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="editEndDate"
+                            name="end_date"
+                        >
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="form-group">
+
+                        <label for="editProjectStatus">
+                            Status
+                        </label>
+
+                        <select
+                            id="editProjectStatus"
+                            name="status"
+                        >
+
+                            <option value="PLANNING">
+                                Planning
+                            </option>
+
+                            <option value="ACTIVE">
+                                Active
+                            </option>
+
+                            <option value="COMPLETED">
+                                Completed
+                            </option>
+
+                            <option value="CANCELLED">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- NOTES -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="editNotes">
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="editNotes"
+                            name="notes"
+                            rows="4"
+                            maxlength="5000"
+                        ></textarea>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-close-modal="editProjectModal"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+
+                    <i data-lucide="save"></i>
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     VIEW PROJECT MODAL
+========================================================== -->
+
+<div
+    class="modal-overlay"
+    id="viewProjectModal"
+    aria-hidden="true"
+    hidden
+>
+
+    <div
+        class="modal modal-large"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="viewProjectTitle"
+    >
+
+        <div class="modal-header">
+
+            <div class="modal-heading">
+
+                <div class="modal-title-icon">
+
+                    <i data-lucide="folder-open"></i>
+
+                </div>
+
+                <div>
+
+                    <span
+                        class="modal-code"
+                        id="viewProjectCode"
+                    >
+                        —
+                    </span>
+
+                    <h2 id="viewProjectTitle">
+                        Project
+                    </h2>
+
+                    <p id="viewProjectClient">
+                        —
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="viewProjectModal"
+                aria-label="Close"
+            >
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+
+            <div class="project-view-grid">
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Requirement
+                    </span>
+
+                    <strong id="viewProjectRequirement">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Skill
+                    </span>
+
+                    <strong id="viewProjectSkill">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Location
+                    </span>
+
+                    <strong id="viewProjectLocation">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Status
+                    </span>
+
+                    <strong id="viewProjectStatus">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Start Date
+                    </span>
+
+                    <strong id="viewProjectStartDate">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        End Date
+                    </span>
+
+                    <strong id="viewProjectEndDate">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Budget
+                    </span>
+
+                    <strong id="viewProjectBudget">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Created By
+                    </span>
+
+                    <strong id="viewProjectCreator">
+                        —
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="view-notes">
+
+                <div class="view-section-heading">
+
+                    <i data-lucide="notebook-text"></i>
+
+                    <span>
+                        Notes
+                    </span>
+
+                </div>
+
+
+                <p id="viewProjectNotes">
+                    No notes added.
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                data-close-modal="viewProjectModal"
+            >
+                Close
+            </button>
+
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                id="editFromViewProject"
+            >
+
+                <i data-lucide="pencil"></i>
+
+                Edit Project
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     STATUS MODAL
+========================================================== -->
+
+<div
+    class="modal-overlay"
+    id="projectStatusModal"
+    aria-hidden="true"
+    hidden
+>
+
+    <div
+        class="modal modal-small"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="projectStatusTitle"
+    >
+
+        <div class="modal-header">
+
+            <div class="modal-heading">
+
+                <div class="modal-title-icon">
+
+                    <i data-lucide="refresh-cw"></i>
+
+                </div>
+
+                <div>
+
+                    <h2 id="projectStatusTitle">
+                        Update Status
+                    </h2>
+
+                    <p id="projectStatusProjectName">
+                        Update project status.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="projectStatusModal"
+                aria-label="Close"
+            >
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            id="projectStatusForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <div class="modal-body">
+
+                <div class="form-group">
+
+                    <label for="projectStatusSelect">
+                        Project Status
+                    </label>
+
+                    <select
+                        id="projectStatusSelect"
+                        name="status"
+                        required
+                    >
+
+                        <option value="PLANNING">
+                            Planning
+                        </option>
+
+                        <option value="ACTIVE">
+                            Active
+                        </option>
+
+                        <option value="COMPLETED">
+                            Completed
+                        </option>
+
+                        <option value="CANCELLED">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-close-modal="projectStatusModal"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+
+                    <i data-lucide="check"></i>
+
+                    Update Status
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     DELETE MODAL
+========================================================== -->
+
+{% if user and user.role == "SUPER_ADMIN" %}
+
+<div
+    class="modal-overlay"
+    id="deleteProjectModal"
+    aria-hidden="true"
+    hidden
+>
+
+    <div
+        class="modal modal-small"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteProjectTitle"
+    >
+
+        <div class="modal-header">
+
+            <div class="modal-heading">
+
+                <div class="modal-title-icon modal-title-icon-danger">
+
+                    <i data-lucide="trash-2"></i>
+
+                </div>
+
+                <div>
+
+                    <h2 id="deleteProjectTitle">
+                        Delete Project
+                    </h2>
+
+                    <p>
+                        This action cannot be undone.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="deleteProjectModal"
+                aria-label="Close"
+            >
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            id="deleteProjectForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <div class="modal-body">
+
+                <div class="delete-warning">
+
+                    <div class="delete-warning-icon">
+
+                        <i data-lucide="triangle-alert"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Are you sure?
+                        </strong>
+
+                        <p>
+
+                            You are about to permanently delete
+
+                            <strong id="deleteProjectName">
+                                this project
+                            </strong>.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-close-modal="deleteProjectModal"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-danger"
+                >
+
+                    <i data-lucide="trash-2"></i>
+
+                    Delete Project
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+
+<!-- =========================================================
+     ASSIGN TRAINER MODAL
+========================================================== -->
+
+{% if user and user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+<div
+    class="modal-overlay"
+    id="assignTrainerModal"
+    aria-hidden="true"
+    hidden
+>
+
+    <div
+        class="modal modal-small"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="assignTrainerTitle"
+    >
+
+        <div class="modal-header">
+
+            <div class="modal-heading">
+
+                <div class="modal-title-icon">
+                    <i data-lucide="users"></i>
+                </div>
+
+                <div>
+
+                    <span
+                        class="modal-code"
+                        id="assignTrainerProjectCode"
+                    >
+                        —
+                    </span>
+
+                    <h2 id="assignTrainerTitle">
+                        Assign Trainers
+                    </h2>
+
+                    <p id="assignTrainerProjectName">
+                        —
+                    </p>
+
+                </div>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="assignTrainerModal"
+                aria-label="Close"
+            >
+                <i data-lucide="x"></i>
+            </button>
+
+        </div>
+
+        <form
+            method="POST"
+            id="assignTrainerForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <div class="modal-body">
+
+                <div class="view-section-heading">
+                    <i data-lucide="user-check"></i>
+                    <span>Assigned Trainers</span>
+                </div>
+
+                <div
+                    id="viewProjectTrainers"
+                    class="project-trainer-list"
+                ></div>
+
+                <div class="form-group">
+
+                    <label for="assignTrainerSelect">
+                        Select Trainer
+                    </label>
+
+                    <select
+                        id="assignTrainerSelect"
+                        name="trainer_id"
+                        required
+                    >
+
+                        <option value="">
+                            Select a trainer
+                        </option>
+
+                        {% for trainer in available_trainers %}
+
+                            <option value="{{ trainer.id }}">
+                                {{ trainer.full_name }}{% if trainer.location %} — {{ trainer.location }}{% endif %}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-close-modal="assignTrainerModal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    <i data-lucide="user-plus"></i>
+                    Assign Trainer
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<!-- =========================================================
+     PROJECT DATA
+========================================================== -->
+
+<script>
+
+window.projectData = [
+
+    {% for project in projects %}
+
+    {
+        id: {{ project.id|tojson }},
+
+        project_code:
+            {{ project.project_code|tojson }},
+
+        project_name:
+            {{ project.project_name|tojson }},
+
+        requirement_id:
+            {% if project.requirement %}
+                {{ project.requirement.id|tojson }}
+            {% else %}
+                null
+            {% endif %},
+
+        requirement_code:
+            {% if project.requirement %}
+                {{ project.requirement.requirement_code|tojson }}
+            {% else %}
+                ""
+            {% endif %},
+
+        requirement_title:
+            {% if project.requirement %}
+                {{ project.requirement.title|tojson }}
+            {% else %}
+                ""
+            {% endif %},
+
+        client_name:
+            {{ project.client_name|tojson }},
+
+        skill:
+            {{ project.skill|tojson }},
+
+        location:
+            {{ (project.location or "")|tojson }},
+
+        start_date:
+            {% if project.start_date %}
+                {{ project.start_date.strftime('%Y-%m-%d')|tojson }}
+            {% else %}
+                ""
+            {% endif %},
+
+        end_date:
+            {% if project.end_date %}
+                {{ project.end_date.strftime('%Y-%m-%d')|tojson }}
+            {% else %}
+                ""
+            {% endif %},
+
+        budget:
+            {{ (project.budget or 0)|tojson }},
+
+        status:
+            {{ project.status|tojson }},
+
+        notes:
+            {{ (project.notes or "")|tojson }},
+
+        trainer_assignments: [
+            {% for assignment in project.trainer_assignments %}
+            {
+                id: {{ assignment.id|tojson }},
+                trainer_id: {{ assignment.trainer_id|tojson }},
+                trainer_name:
+                    {% if assignment.trainer %}
+                        {{ assignment.trainer.full_name|tojson }}
+                    {% else %}
+                        ""
+                    {% endif %},
+                trainer_location:
+                    {% if assignment.trainer %}
+                        {{ (assignment.trainer.location or "")|tojson }}
+                    {% else %}
+                        ""
+                    {% endif %},
+                assignment_status:
+                    {{ (assignment.assignment_status or "")|tojson }},
+                assigned_at:
+                    {% if assignment.assigned_at %}
+                        {{ assignment.assigned_at.strftime('%d %b %Y, %I:%M %p')|tojson }}
+                    {% else %}
+                        ""
+                    {% endif %}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+
+        created_at:
+            {% if project.created_at %}
+                {{ project.created_at.strftime('%d %b %Y, %I:%M %p')|tojson }}
+            {% else %}
+                ""
+            {% endif %},
+
+        creator_name:
+            {% if project.creator %}
+                {{ project.creator.full_name|tojson }}
+            {% else %}
+                ""
+            {% endif %},
+
+        creator_email:
+            {% if project.creator %}
+                {{ project.creator.email|tojson }}
+            {% else %}
+                ""
+            {% endif %}
+    }
+
+    {% if not loop.last %},{% endif %}
+
+    {% endfor %}
+
+];
+
+
+window.projectUrls = {
+
+    create:
+        "{{ url_for('create_project') }}",
+
+    editBase:
+        "{{ url_for('edit_project', project_id=0) }}",
+
+    statusBase:
+        "{{ url_for('update_project_status', project_id=0) }}",
+
+    deleteBase:
+        "{{ url_for('delete_project', project_id=0) }}",
+
+    assignTrainerBase:
+        "/projects/0/trainers/assign",
+
+    removeTrainerBase:
+        "/projects/0/trainers/0/remove"
+
+};
+
+window.projectCsrfToken =
+    "{{ csrf_token }}";
+
+</script>
+
+{% endblock %}
+
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/projects.js') }}"
+></script>
+
+{% endblock %}

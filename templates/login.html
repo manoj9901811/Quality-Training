@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="QT Platform - Quality Training Management Platform"
+    >
+
+    <title>Login - QT Platform</title>
+
+
+    <!-- Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        :root {
+
+            --blue: #1677ff;
+            --blue-dark: #075bd6;
+
+            --white: #ffffff;
+
+            --text-dark: #111827;
+
+            --text-muted: #64748b;
+
+        }
+
+
+        html,
+        body {
+
+            width: 100%;
+            height: 100%;
+
+        }
+
+
+        body {
+
+            font-family: "Inter", sans-serif;
+
+            overflow: hidden;
+
+        }
+
+
+        svg {
+
+            display: block;
+
+        }
+
+
+        /* ==================================================
+           MAIN BACKGROUND
+        ================================================== */
+
+        .login-page {
+
+            width: 100%;
+            height: 100vh;
+
+            min-height: 650px;
+
+            position: relative;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background-image:
+                linear-gradient(
+                    90deg,
+                    rgba(3, 18, 42, 0.82) 0%,
+                    rgba(5, 25, 55, 0.66) 42%,
+                    rgba(5, 25, 55, 0.25) 100%
+                ),
+                url("{{ url_for('static', filename='assets/login-background.png') }}");
+
+            background-size: cover;
+
+            background-position: center;
+
+            background-repeat: no-repeat;
+
+        }
+
+
+        /* ==================================================
+           TOP BRAND
+        ================================================== */
+
+        .top-brand {
+
+            position: absolute;
+
+            top: 42px;
+
+            left: 6%;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            color: white;
+
+            z-index: 5;
+
+        }
+
+
+        .brand-logo {
+
+            width: 48px;
+
+            height: 48px;
+
+            border-radius: 13px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: rgba(255, 255, 255, 0.13);
+
+            border: 1px solid rgba(255, 255, 255, 0.25);
+
+            backdrop-filter: blur(12px);
+
+            font-size: 17px;
+
+            font-weight: 800;
+
+            letter-spacing: -1px;
+
+        }
+
+
+        .brand-name {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+
+        }
+
+
+        .brand-name strong {
+
+            font-size: 20px;
+
+            font-weight: 800;
+
+            letter-spacing: -0.5px;
+
+        }
+
+
+        .brand-name span {
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1.4px;
+
+            color: rgba(255, 255, 255, 0.65);
+
+        }
+
+
+        /* ==================================================
+           TOP RIGHT TEXT
+        ================================================== */
+
+        .top-navigation {
+
+            position: absolute;
+
+            top: 54px;
+
+            right: 6%;
+
+            z-index: 5;
+
+            display: flex;
+
+            align-items: center;
+
+            color: rgba(255, 255, 255, 0.8);
+
+            font-size: 13px;
+
+            font-weight: 500;
+
+            letter-spacing: 0.2px;
+
+        }
+
+
+        .top-navigation .dot {
+
+            width: 3px;
+
+            height: 3px;
+
+            margin: 0 12px;
+
+            border-radius: 50%;
+
+            background: rgba(255, 255, 255, 0.4);
+
+        }
+
+
+        /* ==================================================
+           LEFT CONTENT
+        ================================================== */
+
+        .left-content {
+
+            position: absolute;
+
+            left: 6%;
+
+            top: 50%;
+
+            transform: translateY(-46%);
+
+            width: 46%;
+
+            max-width: 590px;
+
+            color: white;
+
+            z-index: 3;
+
+        }
+
+
+        .eyebrow {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            padding: 8px 14px;
+
+            margin-bottom: 24px;
+
+            border-radius: 999px;
+
+            background: rgba(255, 255, 255, 0.10);
+
+            border: 1px solid rgba(255, 255, 255, 0.15);
+
+            backdrop-filter: blur(10px);
+
+            color: rgba(255, 255, 255, 0.88);
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            letter-spacing: 0.2px;
+
+        }
+
+
+        .eyebrow-dot {
+
+            width: 7px;
+
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #60a5fa;
+
+            box-shadow:
+                0 0 0 4px rgba(96, 165, 250, 0.12),
+                0 0 12px rgba(96, 165, 250, 0.8);
+
+        }
+
+
+        .left-content h1 {
+
+            font-size: clamp(40px, 4.5vw, 64px);
+
+            line-height: 1.04;
+
+            letter-spacing: -3px;
+
+            font-weight: 800;
+
+            margin-bottom: 23px;
+
+        }
+
+
+        .left-content h1 .highlight {
+
+            color: #60a5fa;
+
+        }
+
+
+        .left-content > p {
+
+            max-width: 540px;
+
+            color: rgba(255, 255, 255, 0.76);
+
+            font-size: 15px;
+
+            line-height: 1.8;
+
+            margin-bottom: 34px;
+
+        }
+
+
+        /* ==================================================
+           FEATURES
+        ================================================== */
+
+        .features {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 17px;
+
+        }
+
+
+        .feature {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+        }
+
+
+        .feature-icon {
+
+            width: 38px;
+
+            height: 38px;
+
+            flex-shrink: 0;
+
+            border-radius: 11px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: rgba(21, 119, 255, 0.18);
+
+            border: 1px solid rgba(96, 165, 250, 0.25);
+
+            color: #bfdbfe;
+
+        }
+
+
+        .feature-icon svg {
+
+            width: 18px;
+
+            height: 18px;
+
+            stroke: #bfdbfe;
+
+        }
+
+
+        .feature-text {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 2px;
+
+        }
+
+
+        .feature-text strong {
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            color: white;
+
+        }
+
+
+        .feature-text span {
+
+            font-size: 11px;
+
+            color: rgba(255, 255, 255, 0.58);
+
+        }
+
+
+        /* ==================================================
+           LOGIN AREA
+        ================================================== */
+
+        .login-area {
+    position: absolute;
+    right: 15%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 420px;
+    z-index: 5;
+}
+
+
+        /* ==================================================
+           LOGIN PANEL
+        ================================================== */
+
+        .login-panel {
+
+            width: 100%;
+
+            padding: 43px 45px;
+
+            border-radius: 22px;
+
+            background:
+                rgba(255, 255, 255, 0.91);
+
+            border: 1px solid rgba(255, 255, 255, 0.7);
+
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.20),
+                0 8px 30px rgba(0, 0, 0, 0.10);
+
+            backdrop-filter: blur(18px);
+
+        }
+
+
+        /* ==================================================
+           LOGIN HEADER
+        ================================================== */
+
+        .login-header {
+
+            margin-bottom: 29px;
+
+        }
+
+
+        .login-header h2 {
+
+            color: #0f172a;
+
+            font-size: 30px;
+
+            line-height: 1.2;
+
+            font-weight: 800;
+
+            letter-spacing: -1px;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .login-header p {
+
+            color: #64748b;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+
+        }
+
+
+        /* ==================================================
+           ALERT
+        ================================================== */
+
+        .alert {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 10px;
+
+            padding: 12px 14px;
+
+            margin-bottom: 20px;
+
+            border-radius: 10px;
+
+            background: #fef2f2;
+
+            border: 1px solid #fecaca;
+
+            color: #b91c1c;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+
+        }
+
+
+        .alert svg {
+
+            flex-shrink: 0;
+
+            width: 15px;
+
+            height: 15px;
+
+            margin-top: 1px;
+
+            stroke: #b91c1c;
+
+        }
+
+
+        /* ==================================================
+           FORM
+        ================================================== */
+
+        .form-group {
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .form-group label {
+
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: #1e293b;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+        }
+
+
+        .input-wrapper {
+
+            position: relative;
+
+        }
+
+
+        .input-icon {
+
+            position: absolute;
+
+            left: 15px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            display: flex;
+
+            color: #64748b;
+
+            z-index: 2;
+
+            pointer-events: none;
+
+        }
+
+
+        .input-icon svg {
+
+            width: 17px;
+
+            height: 17px;
+
+            stroke: currentColor;
+
+        }
+
+
+        .form-group input {
+
+            width: 100%;
+
+            height: 51px;
+
+            padding: 0 15px 0 43px;
+
+            border-radius: 10px;
+
+            border: 1px solid #d8e0eb;
+
+            background: rgba(255, 255, 255, 0.85);
+
+            color: #0f172a;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            outline: none;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+
+        }
+
+
+        .form-group input::placeholder {
+
+            color: #94a3b8;
+
+        }
+
+
+        .form-group input:hover {
+
+            border-color: #b8c5d6;
+
+        }
+
+
+        .form-group input:focus {
+
+            border-color: var(--blue);
+
+            box-shadow:
+                0 0 0 4px rgba(22, 119, 255, 0.10);
+
+            background: white;
+
+        }
+
+
+        /* ==================================================
+           PASSWORD TOGGLE
+        ================================================== */
+
+        .password-toggle {
+
+            position: absolute;
+
+            right: 12px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            width: 32px;
+
+            height: 32px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            background: transparent;
+
+            color: #64748b;
+
+            cursor: pointer;
+
+            transition:
+                color 0.2s ease,
+                background 0.2s ease;
+
+        }
+
+
+        .password-toggle svg {
+
+            width: 18px;
+
+            height: 18px;
+
+            stroke: currentColor;
+
+        }
+
+
+        .password-toggle:hover {
+
+            color: var(--blue);
+
+            background: rgba(22, 119, 255, 0.08);
+
+        }
+
+
+        .password-toggle .icon-hide {
+
+            display: none;
+
+        }
+
+
+        .password-toggle.is-visible .icon-show {
+
+            display: none;
+
+        }
+
+
+        .password-toggle.is-visible .icon-hide {
+
+            display: block;
+
+        }
+
+
+        #password {
+
+            padding-right: 52px;
+
+        }
+
+
+        /* ==================================================
+           OPTIONS
+        ================================================== */
+
+        .form-options {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin: 3px 0 23px;
+
+        }
+
+
+        .remember {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: #64748b;
+
+            font-size: 11px;
+
+            cursor: pointer;
+
+        }
+
+
+        .remember input {
+
+            width: 15px;
+
+            height: 15px;
+
+            accent-color: var(--blue);
+
+            cursor: pointer;
+
+        }
+
+
+        .forgot {
+
+            color: var(--blue);
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            text-decoration: none;
+
+        }
+
+
+        .forgot:hover {
+
+            text-decoration: underline;
+
+        }
+
+
+        /* ==================================================
+           LOGIN BUTTON
+        ================================================== */
+
+        .login-button {
+
+            width: 100%;
+
+            height: 51px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1680ff,
+                    #0864e8
+                );
+
+            color: white;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            box-shadow:
+                0 9px 20px rgba(22, 119, 255, 0.25);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                opacity 0.2s ease;
+
+        }
+
+
+        .login-button:hover {
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 13px 27px rgba(22, 119, 255, 0.30);
+
+        }
+
+
+        .login-button:active {
+
+            transform: translateY(0);
+
+        }
+
+
+        .login-button:disabled {
+
+            opacity: 0.7;
+
+            cursor: not-allowed;
+
+        }
+
+
+        .arrow {
+
+            display: flex;
+
+            align-items: center;
+
+            transition: transform 0.2s ease;
+
+        }
+
+
+        .arrow svg {
+
+            width: 16px;
+
+            height: 16px;
+
+            stroke: currentColor;
+
+        }
+
+
+        .login-button:hover .arrow {
+
+            transform: translateX(4px);
+
+        }
+
+
+        .spinner {
+
+            display: none;
+
+            width: 15px;
+
+            height: 15px;
+
+            border: 2px solid rgba(255, 255, 255, 0.35);
+
+            border-top-color: #fff;
+
+            border-radius: 50%;
+
+            animation: spin 0.7s linear infinite;
+
+        }
+
+
+        .login-button.is-loading .spinner {
+
+            display: block;
+
+        }
+
+
+        .login-button.is-loading .arrow {
+
+            display: none;
+
+        }
+
+
+        @keyframes spin {
+
+            to {
+
+                transform: rotate(360deg);
+
+            }
+
+        }
+
+
+        /* ==================================================
+           SECURITY
+        ================================================== */
+
+        .security {
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            gap: 7px;
+
+            margin-top: 22px;
+
+            padding-top: 19px;
+
+            border-top: 1px solid #e8edf3;
+
+            color: #94a3b8;
+
+            font-size: 10px;
+
+        }
+
+
+        .security svg {
+
+            width: 13px;
+
+            height: 13px;
+
+            stroke: #94a3b8;
+
+        }
+
+
+        /* ==================================================
+           BOTTOM LEFT
+        ================================================== */
+
+        .bottom-caption {
+
+            position: absolute;
+
+            left: 6%;
+
+            bottom: 34px;
+
+            color: rgba(255, 255, 255, 0.48);
+
+            font-size: 11px;
+
+            letter-spacing: 0.3px;
+
+            z-index: 3;
+
+        }
+
+
+        .bottom-caption strong {
+
+            color: rgba(255, 255, 255, 0.75);
+
+            font-weight: 600;
+
+        }
+
+
+        /* ==================================================
+           RESPONSIVE
+        ================================================== */
+
+        @media (max-width: 1050px) {
+
+            .left-content {
+
+                width: 45%;
+
+            }
+
+
+            .login-area {
+
+                right: 4%;
+
+                width: 390px;
+
+            }
+
+
+            .login-panel {
+
+                padding: 38px 36px;
+
+            }
+
+        }
+
+
+        @media (max-width: 850px) {
+
+            body {
+
+                overflow-y: auto;
+
+            }
+
+
+            .login-page {
+
+                min-height: 100vh;
+
+                height: auto;
+
+                padding: 100px 20px 40px;
+
+                display: block;
+
+                background-position: center;
+
+            }
+
+
+            .top-brand {
+
+                top: 25px;
+
+                left: 25px;
+
+            }
+
+
+            .top-navigation {
+
+                display: none;
+
+            }
+
+
+            .left-content {
+
+                position: relative;
+
+                top: auto;
+
+                left: auto;
+
+                transform: none;
+
+                width: 100%;
+
+                max-width: 600px;
+
+                margin: 0 auto 35px;
+
+            }
+
+
+            .left-content h1 {
+
+                font-size: 42px;
+
+            }
+
+
+            .left-content > p {
+
+                font-size: 14px;
+
+            }
+
+
+            .features {
+
+                display: none;
+
+            }
+
+
+            .login-area {
+
+                position: relative;
+
+                top: auto;
+
+                right: auto;
+
+                transform: none;
+
+                width: 100%;
+
+                max-width: 440px;
+
+                margin: 0 auto;
+
+            }
+
+
+            .bottom-caption {
+
+                display: none;
+
+            }
+
+        }
+
+
+        @media (max-width: 480px) {
+
+            .login-page {
+
+                padding: 90px 15px 30px;
+
+            }
+
+
+            .top-brand {
+
+                top: 20px;
+
+                left: 20px;
+
+            }
+
+
+            .brand-logo {
+
+                width: 42px;
+
+                height: 42px;
+
+            }
+
+
+            .brand-name strong {
+
+                font-size: 17px;
+
+            }
+
+
+            .brand-name span {
+
+                font-size: 8px;
+
+            }
+
+
+            .left-content h1 {
+
+                font-size: 35px;
+
+                letter-spacing: -1.8px;
+
+            }
+
+
+            .left-content > p {
+
+                font-size: 13px;
+
+            }
+
+
+            .login-panel {
+
+                padding: 31px 24px;
+
+                border-radius: 18px;
+
+            }
+
+
+            .login-header h2 {
+
+                font-size: 26px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <main class="login-page">
+
+
+        <!-- ==================================================
+             BRAND
+        ================================================== -->
+
+        <div class="top-brand">
+
+            <div class="brand-logo">
+
+                QT
+
+            </div>
+
+
+            <div class="brand-name">
+
+                <strong>
+                    QT Platform
+                </strong>
+
+                <span>
+                    Quality Training
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             TOP NAVIGATION
+        ================================================== -->
+
+        <div class="top-navigation">
+
+            Learn
+
+            <span class="dot"></span>
+
+            Train
+
+            <span class="dot"></span>
+
+            Grow
+
+            <span class="dot"></span>
+
+            Succeed
+
+        </div>
+
+
+        <!-- ==================================================
+             LEFT CONTENT
+        ================================================== -->
+
+        <section class="left-content">
+
+
+            <div class="eyebrow">
+
+                <span class="eyebrow-dot"></span>
+
+                Quality Training Management Platform
+
+            </div>
+
+
+            <h1>
+
+                Empowering
+
+                <br>
+
+                Training for
+
+                <br>
+
+                <span class="highlight">
+                    a Better Tomorrow
+                </span>
+
+            </h1>
+
+
+            <p>
+
+                QT Platform brings trainers, training programs,
+                requirements and business operations together
+                in one secure and intelligent platform.
+
+            </p>
+
+
+            <div class="features">
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path>
+                        </svg>
+
+                    </div>
+
+
+                    <div class="feature-text">
+
+                        <strong>
+                            Trainer Management
+                        </strong>
+
+                        <span>
+                            Manage and connect with expert trainers
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+
+                    </div>
+
+
+                    <div class="feature-text">
+
+                        <strong>
+                            Organized Training
+                        </strong>
+
+                        <span>
+                            Plan and manage training programs efficiently
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5l-8-3z"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+
+                    </div>
+
+
+                    <div class="feature-text">
+
+                        <strong>
+                            Secure & Reliable
+                        </strong>
+
+                        <span>
+                            Role-based access keeps your data protected
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             LOGIN
+        ================================================== -->
+
+        <section class="login-area">
+
+
+            <div class="login-panel">
+
+
+                <!-- LOGIN HEADER -->
+
+                <div class="login-header">
+
+                    <h2>
+                        Welcome Back
+                    </h2>
+
+                    <p>
+                        Sign in to your QT Platform account
+                    </p>
+
+                </div>
+
+
+                <!-- FLASH MESSAGES -->
+
+                {% with messages = get_flashed_messages(
+                    with_categories=true
+                ) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="alert">
+
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="13"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+
+                                <span>
+                                    {{ message }}
+                                </span>
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- LOGIN FORM -->
+
+                <form
+                    method="POST"
+                    id="loginForm"
+                >
+
+
+                    <!-- EMAIL -->
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                                    <path d="m4 7 8 6 8-6"></path>
+                                </svg>
+
+                            </span>
+
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                autocomplete="email"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="4" y="11" width="16" height="9" rx="2"></rect>
+                                    <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                                </svg>
+
+                            </span>
+
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="passwordToggle"
+                                aria-label="Show password"
+                            >
+
+                                <svg class="icon-show" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+
+                                <svg class="icon-hide" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17.9 17.9A10.6 10.6 0 0 1 12 19.5c-7 0-10.5-7-10.5-7a19.2 19.2 0 0 1 4.2-5.2M9.9 5.2A10.7 10.7 0 0 1 12 5c7 0 10.5 7 10.5 7a19.3 19.3 0 0 1-2.2 3.1"></path>
+                                    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+                                    <line x1="2" y1="2" x2="22" y2="22"></line>
+                                </svg>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- OPTIONS -->
+
+                    <div class="form-options">
+
+
+                        <label class="remember">
+
+                            <input
+                                type="checkbox"
+                                name="remember"
+                            >
+
+                            <span>
+                                Remember me
+                            </span>
+
+                        </label>
+
+
+                        <a
+                            href="#"
+                            class="forgot"
+                            onclick="return false;"
+                        >
+                            Forgot password?
+                        </a>
+
+
+                    </div>
+
+
+                    <!-- LOGIN BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                        id="loginButton"
+                    >
+
+                        <span class="spinner"></span>
+
+                        <span class="button-label">
+                            Login
+                        </span>
+
+                        <span class="arrow">
+
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+
+                        </span>
+
+
+                    </button>
+
+
+                </form>
+
+
+                <!-- SECURITY -->
+
+                <div class="security">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="11" width="16" height="9" rx="2"></rect>
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                    </svg>
+
+                    Secure and protected connection
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             BOTTOM CAPTION
+        ================================================== -->
+
+        <div class="bottom-caption">
+
+            <strong>
+                Building Skills.
+            </strong>
+
+            Creating Opportunities.
+
+        </div>
+
+
+    </main>
+
+
+    <!-- ==================================================
+         JAVASCRIPT
+    ================================================== -->
+
+    <script>
+
+        const password =
+            document.getElementById("password");
+
+        const passwordToggle =
+            document.getElementById("passwordToggle");
+
+
+        passwordToggle.addEventListener(
+            "click",
+            function () {
+
+                const isVisible =
+                    password.type === "text";
+
+                password.type =
+                    isVisible ? "password" : "text";
+
+                passwordToggle.classList.toggle(
+                    "is-visible",
+                    !isVisible
+                );
+
+                passwordToggle.setAttribute(
+                    "aria-label",
+                    isVisible ? "Show password" : "Hide password"
+                );
+
+            }
+        );
+
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+        const loginButton =
+            document.getElementById("loginButton");
+
+
+        loginForm.addEventListener(
+            "submit",
+            function () {
+
+                loginButton.disabled = true;
+
+                loginButton.classList.add("is-loading");
+
+                loginButton.querySelector(
+                    ".button-label"
+                ).textContent = "Signing in...";
+
+            }
+        );
+
+    </script>
+
+
+</body>
+
+</html>

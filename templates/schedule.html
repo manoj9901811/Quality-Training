@@ -1,0 +1,1138 @@
+{% extends "base.html" %}
+
+{% block page_title %}Training Schedule{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/schedule.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="schedule-page">
+
+    <!-- =========================================================
+         PAGE HEADER
+    ========================================================== -->
+    <div class="page-header">
+
+        <div class="page-header-left">
+
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <i data-lucide="chevron-right"></i>
+                <strong>Schedule</strong>
+            </div>
+
+            <h1>Training Schedule</h1>
+
+            <p>
+                Create and manage training sessions, trainers and schedules.
+            </p>
+
+        </div>
+
+        {% if user.role in ['SUPER_ADMIN', 'VENDOR'] %}
+
+        <button
+            type="button"
+            class="primary-button"
+            onclick="openScheduleModal('create')"
+        >
+            <i data-lucide="plus"></i>
+            <span>Add Schedule</span>
+        </button>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+    ========================================================== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="flash-container">
+
+                {% for category, message in messages %}
+
+                    <div class="flash-message {{ category }}">
+
+                        {% if category == 'success' %}
+                            <i data-lucide="circle-check"></i>
+                        {% elif category == 'danger' or category == 'error' %}
+                            <i data-lucide="circle-alert"></i>
+                        {% else %}
+                            <i data-lucide="info"></i>
+                        {% endif %}
+
+                        <span>{{ message }}</span>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         STATISTICS
+    ========================================================== -->
+    <div class="stats-grid">
+
+        <!-- Total -->
+        <div class="stat-card">
+
+            <div class="stat-icon blue">
+                <i data-lucide="calendar-days"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <div class="stat-top">
+                    <span>Total Schedules</span>
+                    <span class="stat-tag blue-tag">All</span>
+                </div>
+
+                <strong id="totalSchedules">0</strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- Today -->
+        <div class="stat-card">
+
+            <div class="stat-icon green">
+                <i data-lucide="calendar-check"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <div class="stat-top">
+                    <span>Today's Sessions</span>
+                    <span class="stat-tag green-tag">Today</span>
+                </div>
+
+                <strong id="todaySchedules">0</strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- Upcoming -->
+        <div class="stat-card">
+
+            <div class="stat-icon orange">
+                <i data-lucide="clock-3"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <div class="stat-top">
+                    <span>Upcoming</span>
+                    <span class="stat-tag orange-tag">Active</span>
+                </div>
+
+                <strong id="upcomingSchedules">0</strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- Completed -->
+        <div class="stat-card">
+
+            <div class="stat-icon purple">
+                <i data-lucide="badge-check"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <div class="stat-top">
+                    <span>Completed</span>
+                    <span class="stat-tag purple-tag">Finished</span>
+                </div>
+
+                <strong id="completedSchedules">0</strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MAIN SCHEDULE CARD
+    ========================================================== -->
+    <div class="schedule-card">
+
+        <!-- Card Header -->
+        <div class="schedule-card-header">
+
+            <div class="card-title-section">
+
+                <div class="card-title-icon">
+                    <i data-lucide="calendar-range"></i>
+                </div>
+
+                <div>
+
+                    <h2>Training Sessions</h2>
+
+                    <p>
+                        Manage and organize all scheduled training sessions.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Search / Filter -->
+            <div class="schedule-toolbar">
+
+                <div class="search-box">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        id="scheduleSearch"
+                        placeholder="Search schedules by project, trainer or title..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <select id="statusFilter" class="filter-select">
+
+                    <option value="ALL">All Status</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             TABLE
+        ====================================================== -->
+
+        <div class="table-wrapper">
+
+            <table class="schedule-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>SESSION</th>
+
+                        <th>PROJECT</th>
+
+                        <th>TRAINER</th>
+
+                        <th>DATE & TIME</th>
+
+                        <th>MODE</th>
+
+                        <th>STATUS</th>
+
+                        <th class="actions-column">ACTIONS</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="scheduleTableBody">
+
+                    {% if schedules %}
+
+                        {% for item in schedules %}
+
+                        <tr
+                            class="schedule-row"
+                            data-status="{{ item.status }}"
+                            data-search="
+                                {{ item.title }}
+                                {{ item.schedule_code }}
+                                {{ item.project.project_name if item.project else '' }}
+                                {{ item.trainer.full_name if item.trainer else '' }}
+                                {{ item.mode }}
+                            "
+                        >
+
+                            <!-- SESSION -->
+                            <td>
+
+                                <div class="session-info">
+
+                                    <div class="session-avatar">
+                                        <i data-lucide="calendar"></i>
+                                    </div>
+
+                                    <div class="session-details">
+
+                                        <strong>
+                                            {{ item.title }}
+                                        </strong>
+
+                                        <span>
+                                            {{ item.schedule_code }}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- PROJECT -->
+                            <td>
+
+                                {% if item.project %}
+
+                                    <div class="project-info">
+
+                                        <strong>
+                                            {{ item.project.project_name }}
+                                        </strong>
+
+                                        <span>
+                                            {{ item.project.client_name or '—' }}
+                                        </span>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <span class="muted-text">
+                                        No project
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- TRAINER -->
+                            <td>
+
+                                {% if item.trainer %}
+
+                                    <div class="trainer-info">
+
+                                        <div class="trainer-avatar">
+                                            {{ item.trainer.full_name[0]|upper }}
+                                        </div>
+
+                                        <div class="trainer-details">
+
+                                            <strong>
+                                                {{ item.trainer.full_name }}
+                                            </strong>
+
+                                            <span>
+                                                {{ item.trainer.location or 'Trainer' }}
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <span class="muted-text">
+                                        No trainer
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- DATE / TIME -->
+                            <td>
+
+                                <div class="datetime-info">
+
+                                    <strong>
+                                        {{ item.start_datetime.strftime('%d %b %Y') }}
+                                    </strong>
+
+                                    <span>
+
+                                        {{ item.start_datetime.strftime('%I:%M %p') }}
+
+                                        {% if item.end_datetime %}
+                                            -
+                                            {{ item.end_datetime.strftime('%I:%M %p') }}
+                                        {% endif %}
+
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- MODE -->
+                            <td>
+
+                                {% if item.mode == 'ONLINE' %}
+
+                                    <span class="mode-badge online">
+                                        <i data-lucide="video"></i>
+                                        Online
+                                    </span>
+
+                                {% elif item.mode == 'HYBRID' %}
+
+                                    <span class="mode-badge hybrid">
+                                        <i data-lucide="layers-2"></i>
+                                        Hybrid
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="mode-badge offline">
+                                        <i data-lucide="map-pin"></i>
+                                        Offline
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- STATUS -->
+                            <td>
+
+                                {% if item.status == 'COMPLETED' %}
+
+                                    <span class="status-badge completed">
+                                        <span class="status-dot"></span>
+                                        Completed
+                                    </span>
+
+                                {% elif item.status == 'CANCELLED' %}
+
+                                    <span class="status-badge cancelled">
+                                        <span class="status-dot"></span>
+                                        Cancelled
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-badge scheduled">
+                                        <span class="status-dot"></span>
+                                        Scheduled
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    {% if user.role in ['SUPER_ADMIN', 'VENDOR'] %}
+
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                            title="Edit Schedule"
+                                            onclick="openScheduleModal('edit', {{ item.id }})"
+                                        >
+                                            <i data-lucide="pencil"></i>
+                                        </button>
+
+
+                                        {% if item.status == 'SCHEDULED' %}
+
+                                            <form
+                                                method="POST"
+                                                action="{{ url_for('update_schedule_status', schedule_id=item.id) }}"
+                                                class="inline-form"
+                                            >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="status"
+                                                    value="COMPLETED"
+                                                >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="csrf_token"
+                                                    value="{{ csrf_token }}"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    class="icon-button success-action"
+                                                    title="Mark Completed"
+                                                    onclick="return confirm('Mark this schedule as completed?')"
+                                                >
+                                                    <i data-lucide="check"></i>
+                                                </button>
+
+                                            </form>
+
+
+                                            <form
+                                                method="POST"
+                                                action="{{ url_for('update_schedule_status', schedule_id=item.id) }}"
+                                                class="inline-form"
+                                            >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="status"
+                                                    value="CANCELLED"
+                                                >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="csrf_token"
+                                                    value="{{ csrf_token }}"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    class="icon-button danger-action"
+                                                    title="Cancel Schedule"
+                                                    onclick="return confirm('Cancel this schedule?')"
+                                                >
+                                                    <i data-lucide="x"></i>
+                                                </button>
+
+                                            </form>
+
+                                        {% endif %}
+
+
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('delete_schedule', schedule_id=item.id) }}"
+                                            class="inline-form"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button delete-action"
+                                                title="Delete Schedule"
+                                                onclick="return confirm('Are you sure you want to delete this schedule?')"
+                                            >
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+
+                                        </form>
+
+                                    {% else %}
+
+                                        <span class="current-account-text">
+                                            View only
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr id="emptyScheduleRow">
+
+                            <td colspan="7">
+
+                                <div class="empty-state">
+
+                                    <div class="empty-icon">
+                                        <i data-lucide="calendar-x"></i>
+                                    </div>
+
+                                    <h3>No schedules found</h3>
+
+                                    <p>
+                                        There are no training sessions scheduled yet.
+                                    </p>
+
+                                    {% if user.role in ['SUPER_ADMIN', 'VENDOR'] %}
+
+                                        <button
+                                            type="button"
+                                            class="secondary-button"
+                                            onclick="openScheduleModal('create')"
+                                        >
+                                            <i data-lucide="plus"></i>
+                                            Add Schedule
+                                        </button>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- =====================================================
+             TABLE FOOTER
+        ====================================================== -->
+
+        <div class="table-footer">
+
+            <span id="scheduleCount">
+                Showing 0 schedules
+            </span>
+
+            <div class="pagination">
+
+                <button
+                    type="button"
+                    class="pagination-button"
+                    disabled
+                >
+                    <i data-lucide="chevron-left"></i>
+                </button>
+
+                <button
+                    type="button"
+                    class="pagination-button active"
+                >
+                    1
+                </button>
+
+                <button
+                    type="button"
+                    class="pagination-button"
+                    disabled
+                >
+                    <i data-lucide="chevron-right"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     SCHEDULE MODAL
+============================================================== -->
+
+{% if user.role in ['SUPER_ADMIN', 'VENDOR'] %}
+
+<div
+    id="scheduleModal"
+    class="schedule-modal"
+    aria-hidden="true"
+>
+
+    <div
+        class="modal-overlay"
+        onclick="closeScheduleModal()"
+    ></div>
+
+
+    <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+    >
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="modalTitle">
+                    Add Schedule
+                </h2>
+
+                <p id="modalSubtitle">
+                    Create a new training session.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeScheduleModal()"
+            >
+                <i data-lucide="x"></i>
+            </button>
+
+        </div>
+
+
+        <!-- Modal Body -->
+        <form
+            id="scheduleForm"
+            method="POST"
+            action="{{ url_for('create_schedule') }}"
+        >
+
+            <input
+                type="hidden"
+                id="scheduleId"
+                name="schedule_id"
+                value=""
+            >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <div class="modal-body">
+
+                <!-- Basic Information -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+
+                        <i data-lucide="file-text"></i>
+
+                        <div>
+                            <strong>Session Details</strong>
+                            <span>Enter the basic training information.</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <div class="form-field full-width">
+
+                            <label for="title">
+                                Session Title
+                                <span>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="title"
+                                name="title"
+                                placeholder="Enter training session title"
+                                required
+                            >
+
+                            <small
+                                class="field-error"
+                                id="titleError"
+                            ></small>
+
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="project_id">
+                                Project
+                                <span>*</span>
+                            </label>
+
+                            <select
+                                id="project_id"
+                                name="project_id"
+                                required
+                            >
+
+                                <option value="">
+                                    Select project
+                                </option>
+
+                                {% for project in projects %}
+
+                                    <option value="{{ project.id }}">
+                                        {{ project.project_name }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <small
+                                class="field-error"
+                                id="projectError"
+                            ></small>
+
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="trainer_id">
+                                Trainer
+                                <span>*</span>
+                            </label>
+
+                            <select
+                                id="trainer_id"
+                                name="trainer_id"
+                                required
+                            >
+
+                                <option value="">
+                                    Select trainer
+                                </option>
+
+                            </select>
+
+                            <small
+                                class="field-error"
+                                id="trainerError"
+                            ></small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Date / Time -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+
+                        <i data-lucide="clock-3"></i>
+
+                        <div>
+                            <strong>Date & Time</strong>
+                            <span>Set the session timing.</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <div class="form-field">
+
+                            <label for="start_datetime">
+                                Start Date & Time
+                                <span>*</span>
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                id="start_datetime"
+                                name="start_datetime"
+                                required
+                            >
+
+                            <small
+                                class="field-error"
+                                id="startError"
+                            ></small>
+
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="end_datetime">
+                                End Date & Time
+                                <span>*</span>
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                id="end_datetime"
+                                name="end_datetime"
+                                required
+                            >
+
+                            <small
+                                class="field-error"
+                                id="endError"
+                            ></small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Mode -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+
+                        <i data-lucide="monitor"></i>
+
+                        <div>
+                            <strong>Training Mode</strong>
+                            <span>Choose how the session will be conducted.</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <div class="form-field">
+
+                            <label for="mode">
+                                Mode
+                                <span>*</span>
+                            </label>
+
+                            <select
+                                id="mode"
+                                name="mode"
+                                required
+                            >
+
+                                <option value="OFFLINE">
+                                    Offline
+                                </option>
+
+                                <option value="ONLINE">
+                                    Online
+                                </option>
+
+                                <option value="HYBRID">
+                                    Hybrid
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div
+                            class="form-field"
+                            id="locationField"
+                        >
+
+                            <label for="location">
+                                Location
+                                <span id="locationRequired">*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="location"
+                                name="location"
+                                placeholder="Training location"
+                            >
+
+                        </div>
+
+
+                        <div
+                            class="form-field full-width hidden-field"
+                            id="meetingLinkField"
+                        >
+
+                            <label for="meeting_link">
+                                Meeting Link
+                                <span id="meetingRequired">*</span>
+                            </label>
+
+                            <input
+                                type="url"
+                                id="meeting_link"
+                                name="meeting_link"
+                                placeholder="https://meet.google.com/..."
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Notes -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+
+                        <i data-lucide="message-square"></i>
+
+                        <div>
+                            <strong>Additional Information</strong>
+                            <span>Optional notes for this session.</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="notes">
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            rows="4"
+                            placeholder="Add any additional instructions or notes..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="closeScheduleModal()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="saveScheduleButton"
+                >
+                    <i data-lucide="save"></i>
+                    <span>Save Schedule</span>
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<!-- =============================================================
+     JAVASCRIPT DATA
+============================================================== -->
+
+<script>
+
+    window.scheduleTrainerMap =
+        {{ trainer_map | tojson }};
+
+    window.scheduleData = [
+
+        {% for item in schedules %}
+
+        {
+            id: {{ item.id }},
+            schedule_code: {{ item.schedule_code | tojson }},
+            title: {{ item.title | tojson }},
+
+            project_id:
+                {{ item.project_id | tojson }},
+
+            trainer_id:
+                {{ item.trainer_id | tojson }},
+
+            start_datetime:
+                {{ item.start_datetime.strftime('%Y-%m-%dT%H:%M') | tojson }},
+
+            end_datetime:
+                {{ item.end_datetime.strftime('%Y-%m-%dT%H:%M') | tojson }},
+
+            mode:
+                {{ item.mode | tojson }},
+
+            location:
+                {{ (item.location or '') | tojson }},
+
+            meeting_link:
+                {{ (item.meeting_link or '') | tojson }},
+
+            status:
+                {{ item.status | tojson }},
+
+            notes:
+                {{ (item.notes or '') | tojson }}
+        }
+
+        {% if not loop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    window.scheduleCreateUrl =
+        "{{ url_for('create_schedule') }}";
+
+
+    window.scheduleEditBaseUrl =
+        "/schedule/__SCHEDULE_ID__/edit";
+
+
+    window.scheduleUserRole =
+        "{{ user.role }}";
+
+</script>
+
+
+{% endblock %}
+
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/schedule.js') }}"></script>
+{% endblock %}

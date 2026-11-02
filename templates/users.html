@@ -1,0 +1,1001 @@
+{% extends "base.html" %}
+
+{% block title %}
+User Management - QT Platform
+{% endblock %}
+
+{% block page_title %}
+User Management
+{% endblock %}
+
+
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/users.css') }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="users-page">
+
+    <!-- ==========================================
+         DECORATIVE BACKGROUND
+    =========================================== -->
+
+    <div class="background-decoration decoration-one"></div>
+    <div class="background-decoration decoration-two"></div>
+
+
+    <!-- ==========================================
+         PAGE BREADCRUMB
+    =========================================== -->
+
+    <div class="page-breadcrumb">
+
+        <span>
+            Dashboard
+        </span>
+
+        <i data-lucide="chevron-right"></i>
+
+        <strong>
+            User Management
+        </strong>
+
+    </div>
+
+
+    <!-- ==========================================
+         PAGE HEADER
+    =========================================== -->
+
+    <div class="page-heading">
+
+        <div>
+
+            <h1>
+                User Management
+            </h1>
+
+            <p>
+                Create and manage QT Platform users.
+                Control access, roles and permissions.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-button"
+            id="openCreateUserButton"
+            onclick="openCreateUserModal()"
+        >
+
+            <i data-lucide="plus"></i>
+
+            Add User
+
+        </button>
+
+    </div>
+
+
+    <!-- ==========================================
+         STATISTICS
+    =========================================== -->
+
+    <div class="user-stats">
+
+        <!-- TOTAL -->
+
+        <div class="user-stat-card total">
+
+            <div class="user-stat-icon">
+                <i data-lucide="users"></i>
+            </div>
+
+            <div class="user-stat-content">
+
+                <span class="user-stat-label">
+                    Total Users
+                </span>
+
+                <span class="user-stat-value">
+                    {{ users|length }}
+                </span>
+
+            </div>
+
+            <span class="user-stat-note">
+                Current
+            </span>
+
+        </div>
+
+
+        <!-- ACTIVE -->
+
+        <div class="user-stat-card active">
+
+            <div class="user-stat-icon">
+                <i data-lucide="user-check"></i>
+            </div>
+
+            <div class="user-stat-content">
+
+                <span class="user-stat-label">
+                    Active Users
+                </span>
+
+                <span class="user-stat-value">
+
+                    {{
+                        users
+                        |selectattr("is_active")
+                        |list
+                        |length
+                    }}
+
+                </span>
+
+            </div>
+
+            <span class="user-stat-note">
+                Active
+            </span>
+
+        </div>
+
+
+        <!-- INACTIVE -->
+
+        <div class="user-stat-card inactive">
+
+            <div class="user-stat-icon">
+                <i data-lucide="user-x"></i>
+            </div>
+
+            <div class="user-stat-content">
+
+                <span class="user-stat-label">
+                    Inactive Users
+                </span>
+
+                <span class="user-stat-value">
+
+                    {{
+                        users
+                        |rejectattr("is_active")
+                        |list
+                        |length
+                    }}
+
+                </span>
+
+            </div>
+
+            <span class="user-stat-note">
+                Current
+            </span>
+
+        </div>
+
+
+        <!-- ADMINISTRATORS -->
+
+        <div class="user-stat-card admin">
+
+            <div class="user-stat-icon">
+                <i data-lucide="shield"></i>
+            </div>
+
+            <div class="user-stat-content">
+
+                <span class="user-stat-label">
+                    Administrators
+                </span>
+
+                <span class="user-stat-value">
+
+                    {{
+                        users
+                        |selectattr(
+                            "role",
+                            "in",
+                            [
+                                "SUPER_ADMIN",
+                                "VENDOR"
+                            ]
+                        )
+                        |list
+                        |length
+                    }}
+
+                </span>
+
+            </div>
+
+            <span class="user-stat-note">
+                Platform
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         FLASH MESSAGES
+    =========================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="messages">
+
+                {% for category, message in messages %}
+
+                    <div class="message {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- ==========================================
+         USERS CARD
+    =========================================== -->
+
+    <div class="users-card">
+
+        <!-- TABLE HEADER -->
+
+        <div class="table-header">
+
+            <div class="table-header-left">
+
+                <div class="table-header-icon">
+                    <i data-lucide="users"></i>
+                </div>
+
+                <div>
+
+                    <h3>
+                        Platform Users
+                    </h3>
+
+                    <p>
+                        Manage all users in the QT Platform.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- SEARCH + FILTER -->
+
+            <div class="table-tools">
+
+                <div class="table-search">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        id="userSearch"
+                        placeholder="Search users by name, email or role..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <select
+                    id="roleFilter"
+                    class="role-filter"
+                >
+
+                    <option value="">
+                        All Roles
+                    </option>
+
+                    <option value="SUPER_ADMIN">
+                        Super Admin
+                    </option>
+
+                    <option value="VENDOR">
+                        Vendor
+                    </option>
+
+                    <option value="TRAINER">
+                        Trainer
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             USERS TABLE
+        =========================================== -->
+
+        <div class="table-wrapper">
+
+            <table id="usersTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            User
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Role
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Created
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in users %}
+
+                    <tr
+                        class="user-row"
+                        data-role="{{ item.role }}"
+                        data-status="{% if item.is_active %}active{% else %}inactive{% endif %}"
+                    >
+
+                        <!-- USER -->
+
+                        <td>
+
+                            <div class="table-user">
+
+                                <div class="table-avatar">
+
+                                    {% if item.full_name %}
+                                        {{ item.full_name[0] | upper }}
+                                    {% else %}
+                                        U
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+                                        {{ item.full_name }}
+                                    </strong>
+
+                                    {% if item.id == user.id %}
+
+                                        <span class="you-label">
+                                            You
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    <small>
+
+                                        {% if item.role == "TRAINER" %}
+                                            Trainer
+
+                                        {% elif item.role == "VENDOR" %}
+                                            Vendor
+
+                                        {% elif item.role == "SUPER_ADMIN" %}
+                                            System Administrator
+
+                                        {% else %}
+                                            Platform User
+                                        {% endif %}
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- EMAIL -->
+
+                        <td>
+
+                            <span class="email-text">
+                                {{ item.email }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- ROLE -->
+
+                        <td>
+
+                            <span
+                                class="
+                                    role-badge
+                                    role-{{ item.role | lower }}
+                                "
+                            >
+
+                                {{ item.role.replace("_", " ") }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if item.is_active %}
+
+                                <span class="status-badge active">
+
+                                    <span class="status-dot"></span>
+
+                                    Active
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="status-badge inactive">
+
+                                    <span class="status-dot"></span>
+
+                                    Inactive
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- CREATED -->
+
+                        <td>
+
+                            {% if item.created_at %}
+
+                                <div class="created-date">
+
+                                    <strong>
+                                        {{ item.created_at.strftime("%d %b %Y") }}
+                                    </strong>
+
+                                    <small>
+                                        {{ item.created_at.strftime("%I:%M %p") }}
+                                    </small>
+
+                                </div>
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="action-buttons">
+
+                                {% if item.id != user.id %}
+
+                                    <!-- TOGGLE STATUS -->
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'toggle_user',
+                                            user_id=item.id
+                                        ) }}"
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="icon-button"
+                                            title="{% if item.is_active %}Deactivate user{% else %}Activate user{% endif %}"
+                                        >
+
+                                            {% if item.is_active %}
+
+                                                <i data-lucide="user-x"></i>
+
+                                            {% else %}
+
+                                                <i data-lucide="user-check"></i>
+
+                                            {% endif %}
+
+                                        </button>
+
+                                    </form>
+
+
+                                    <!-- DELETE -->
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'delete_user',
+                                            user_id=item.id
+                                        ) }}"
+                                        onsubmit="
+                                            return confirm(
+                                                'Are you sure you want to delete this user?'
+                                            );
+                                        "
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="icon-button danger"
+                                            title="Delete user"
+                                        >
+
+                                            <i data-lucide="trash-2"></i>
+
+                                        </button>
+
+                                    </form>
+
+                                {% else %}
+
+                                    <span class="self-label">
+                                        Current account
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                    {% else %}
+
+                    <!-- EMPTY STATE -->
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty-table"
+                        >
+
+                            <div class="empty-state">
+
+                                <i data-lucide="users"></i>
+
+                                <h4>
+                                    No users found
+                                </h4>
+
+                                <p>
+                                    Create your first platform user.
+                                </p>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- ==========================================
+             TABLE FOOTER
+        =========================================== -->
+
+        <div class="users-table-footer">
+
+            <span id="searchResultMessage">
+
+                Showing 1 to {{ users|length }}
+                of {{ users|length }} users
+
+            </span>
+
+
+            <div class="pagination">
+
+                <button
+                    type="button"
+                    disabled
+                    aria-label="Previous page"
+                >
+
+                    <i data-lucide="chevron-left"></i>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="active"
+                >
+                    1
+                </button>
+
+
+                <button
+                    type="button"
+                    disabled
+                    aria-label="Next page"
+                >
+
+                    <i data-lucide="chevron-right"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =================================================
+     CREATE USER MODAL
+
+     IMPORTANT:
+     This is intentionally OUTSIDE .users-page.
+     JS also moves it directly under body.
+================================================== -->
+
+<div
+    id="createUserModal"
+    class="modal-overlay"
+    hidden
+    aria-hidden="true"
+>
+
+    <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="createUserModalTitle"
+    >
+
+        <!-- HEADER -->
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="createUserModalTitle">
+                    Create User
+                </h2>
+
+                <p>
+                    Add a new QT Platform account.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeCreateUserModal()"
+                aria-label="Close"
+            >
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form
+            method="POST"
+            action="{{ url_for('create_user') }}"
+            id="createUserForm"
+        >
+
+            <!-- CSRF -->
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <div class="modal-body">
+
+                <!-- ROLE -->
+
+                <div class="form-field">
+
+                    <label for="role">
+                        Role
+                    </label>
+
+                    <select
+                        id="role"
+                        name="role"
+                        required
+                    >
+
+                        <option value="">
+                            Select role
+                        </option>
+
+                        <option value="SUPER_ADMIN">
+                            Super Admin
+                        </option>
+
+                        <option value="VENDOR">
+                            Vendor
+                        </option>
+
+                        <option value="TRAINER">
+                            Trainer
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- TRAINER PROFILE -->
+
+                <div
+                    class="form-field"
+                    id="trainerSelectionField"
+                    style="display: none;"
+                >
+
+                    <label for="trainer_id">
+                        Trainer Profile
+                    </label>
+
+
+                    <select
+                        id="trainer_id"
+                        name="trainer_id"
+                    >
+
+                        <option value="">
+                            Select trainer
+                        </option>
+
+                        {% for trainer in available_trainers %}
+
+                            <option
+                                value="{{ trainer.id }}"
+                                data-name="{{ trainer.full_name }}"
+                            >
+
+                                {{ trainer.full_name }}
+
+                                {% if trainer.location %}
+                                    — {{ trainer.location }}
+                                {% endif %}
+
+                            </option>
+
+                        {% else %}
+
+                            <option
+                                value=""
+                                disabled
+                            >
+                                No available trainers
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+
+                    <small>
+                        Only trainers without an existing login
+                        are shown.
+                    </small>
+
+                </div>
+
+
+                <!-- FULL NAME -->
+
+                <div class="form-field">
+
+                    <label for="full_name">
+                        Full Name
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="full_name"
+                        name="full_name"
+                        placeholder="Enter full name"
+                        required
+                        maxlength="150"
+                    >
+
+
+                    <small
+                        id="trainerNameHelp"
+                        style="display: none;"
+                    >
+                        Trainer name is taken from the
+                        selected trainer profile.
+                    </small>
+
+                </div>
+
+
+                <!-- EMAIL -->
+
+                <div class="form-field">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter email address"
+                        required
+                        maxlength="150"
+                        autocomplete="email"
+                    >
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-field">
+
+                    <label for="password">
+                        Temporary Password
+                    </label>
+
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Minimum 8 characters"
+                        required
+                        minlength="8"
+                        autocomplete="new-password"
+                    >
+
+
+                    <small>
+                        Minimum 8 characters.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="closeCreateUserModal()"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+
+                    <i data-lucide="user-plus"></i>
+
+                    Create User
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/users.js') }}"
+></script>
+
+{% endblock %}

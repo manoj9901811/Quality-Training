@@ -1,0 +1,1005 @@
+{% extends "base.html" %}
+
+{% block title %}
+Attendance | QT Platform
+{% endblock %}
+
+{% block page_title %}
+Attendance
+{% endblock %}
+
+{% block css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/attendance.css') }}"
+>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="attendance-page">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+
+        <div>
+            <div class="page-breadcrumb">
+                Dashboard
+                <span>›</span>
+                Attendance
+            </div>
+
+            <h1>Attendance</h1>
+
+            <p>
+                Manage trainer attendance for scheduled training.
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i data-lucide="calendar"></i>
+            </div>
+
+            <div>
+                <span>Sessions</span>
+                <strong>{{ total_sessions }}</strong>
+                <small>Selected date</small>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i data-lucide="clipboard-check"></i>
+            </div>
+
+            <div>
+                <span>Marked</span>
+                <strong>{{ marked_count }}</strong>
+                <small>Attendance records</small>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i data-lucide="circle-check"></i>
+            </div>
+
+            <div>
+                <span>Present</span>
+                <strong>{{ present_count }}</strong>
+                <small>On time</small>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i data-lucide="clock"></i>
+            </div>
+
+            <div>
+                <span>Late</span>
+                <strong>{{ late_count }}</strong>
+                <small>Late arrival</small>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon red">
+                <i data-lucide="circle-x"></i>
+            </div>
+
+            <div>
+                <span>Absent</span>
+                <strong>{{ absent_count }}</strong>
+                <small>Not attended</small>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon cyan">
+                <i data-lucide="percent"></i>
+            </div>
+
+            <div>
+                <span>Attendance</span>
+                <strong>{{ attendance_percentage }}%</strong>
+                <small>For selected day</small>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- FILTERS -->
+
+    <div class="card filter-card">
+
+        <form
+            method="GET"
+            action="{{ url_for('attendance') }}"
+            class="filter-form"
+        >
+
+            <div class="field">
+
+                <label>
+                    Date
+                </label>
+
+                <input
+                    type="date"
+                    name="date"
+                    value="{{ selected_date.strftime('%Y-%m-%d') }}"
+                >
+
+            </div>
+
+
+            {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+            <div class="field">
+
+                <label>
+                    Project
+                </label>
+
+                <select name="project_id">
+
+                    <option value="">
+                        All Projects
+                    </option>
+
+                    {% for project in projects %}
+
+                    <option
+                        value="{{ project.id }}"
+                        {% if request.args.get('project_id')|string == project.id|string %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {{ project.project_code }}
+                        -
+                        {{ project.project_name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Trainer
+                </label>
+
+                <select name="trainer_id">
+
+                    <option value="">
+                        All Trainers
+                    </option>
+
+                    {% for trainer in trainers %}
+
+                    <option
+                        value="{{ trainer.id }}"
+                        {% if request.args.get('trainer_id')|string == trainer.id|string %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {{ trainer.full_name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            {% endif %}
+
+
+            <div class="field">
+
+                <label>
+                    Status
+                </label>
+
+                <select name="status">
+
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option
+                        value="PRESENT"
+                        {% if status_filter == "PRESENT" %}
+                            selected
+                        {% endif %}
+                    >
+                        Present
+                    </option>
+
+                    <option
+                        value="LATE"
+                        {% if status_filter == "LATE" %}
+                            selected
+                        {% endif %}
+                    >
+                        Late
+                    </option>
+
+                    <option
+                        value="ABSENT"
+                        {% if status_filter == "ABSENT" %}
+                            selected
+                        {% endif %}
+                    >
+                        Absent
+                    </option>
+
+                    <option
+                        value="LEAVE"
+                        {% if status_filter == "LEAVE" %}
+                            selected
+                        {% endif %}
+                    >
+                        Leave
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                <i data-lucide="search"></i>
+                Apply
+            </button>
+
+
+            <a
+                href="{{ url_for('attendance') }}"
+                class="secondary-button"
+            >
+                Reset
+            </a>
+
+        </form>
+
+    </div>
+
+
+    <!-- DAILY ATTENDANCE -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Daily Attendance
+                </h2>
+
+                <p>
+                    {{ selected_date.strftime('%d %B %Y') }}
+                </p>
+
+            </div>
+
+            <div class="date-badge">
+                <i data-lucide="calendar"></i>
+                {{ selected_date.strftime('%d %b %Y') }}
+            </div>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>SESSION</th>
+
+                        <th>PROJECT</th>
+
+                        <th>TRAINER</th>
+
+                        <th>TIME</th>
+
+                        <th>MODE</th>
+
+                        <th>STATUS</th>
+
+                        <th>ACTION</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for schedule in schedules %}
+
+                    {% set attendance =
+                        attendance_by_schedule.get(schedule.id)
+                    %}
+
+                    <tr>
+
+                        <!-- SESSION -->
+
+                        <td>
+
+                            <div class="session">
+
+                                <div class="session-icon">
+                                    <i data-lucide="calendar-clock"></i>
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        {{ schedule.title }}
+                                    </strong>
+
+                                    <span>
+                                        {{ schedule.schedule_code }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- PROJECT -->
+
+                        <td>
+
+                            {% if schedule.project %}
+
+                            <strong>
+                                {{ schedule.project.project_name }}
+                            </strong>
+
+                            <small>
+                                {{ schedule.project.project_code }}
+                            </small>
+
+                            {% else %}
+
+                            —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- TRAINER -->
+
+                        <td>
+
+                            {% if schedule.trainer %}
+
+                            <div class="trainer">
+
+                                <div class="avatar">
+                                    {{ schedule.trainer.full_name[0]|upper }}
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        {{ schedule.trainer.full_name }}
+                                    </strong>
+
+                                    <small>
+                                        {{ schedule.trainer.location or "—" }}
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                            {% else %}
+
+                            <span class="muted">
+                                Not Assigned
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- TIME -->
+
+                        <td>
+
+                            <strong>
+                                {{ schedule.start_datetime.strftime('%I:%M %p') }}
+                            </strong>
+
+                            <small>
+                                to
+                                {{ schedule.end_datetime.strftime('%I:%M %p') }}
+                            </small>
+
+                        </td>
+
+
+                        <!-- MODE -->
+
+                        <td>
+
+                            <span
+                                class="mode mode-{{ schedule.mode|lower }}"
+                            >
+
+                                {% if schedule.mode == "ONLINE" %}
+
+                                    Online
+
+                                {% elif schedule.mode == "HYBRID" %}
+
+                                    Hybrid
+
+                                {% else %}
+
+                                    Offline
+
+                                {% endif %}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if attendance %}
+
+                                {% if user.role == "TRAINER" %}
+
+                                    <span class="status status-recorded">
+                                        Recorded
+                                    </span>
+
+                                {% else %}
+
+                                    <span
+                                        class="
+                                            status
+                                            status-{{ attendance.status|lower }}
+                                        "
+                                    >
+                                        {{ attendance.status|title }}
+                                    </span>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="status status-none">
+                                    Not Marked
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTION -->
+
+                        {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="attendance-button"
+                                data-schedule-id="{{ schedule.id }}"
+                                data-title="{{ schedule.title|e }}"
+                                data-trainer="{{ schedule.trainer.full_name|e if schedule.trainer else '' }}"
+                                data-date="{{ selected_date.strftime('%Y-%m-%d') }}"
+                                data-status="{{ attendance.status if attendance else '' }}"
+                                data-check-in="{{ attendance.check_in.strftime('%H:%M') if attendance and attendance.check_in else '' }}"
+                                data-check-out="{{ attendance.check_out.strftime('%H:%M') if attendance and attendance.check_out else '' }}"
+                                data-remarks="{{ attendance.remarks|e if attendance and attendance.remarks else '' }}"
+                            >
+
+                                {% if attendance %}
+
+                                    <i data-lucide="pencil"></i>
+                                    Edit
+
+                                {% else %}
+
+                                    <i data-lucide="plus"></i>
+                                    Mark
+
+                                {% endif %}
+
+                            </button>
+
+                        </td>
+
+                        {% endif %}
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty"
+                        >
+
+                            <i data-lucide="calendar-x"></i>
+
+                            <h3>
+                                No training sessions
+                            </h3>
+
+                            <p>
+                                No schedule is available for this date.
+                            </p>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- PROJECT-WISE TRAINER SUMMARY -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Project-wise Trainer Attendance Summary
+                </h2>
+
+                <p>
+                    Attendance calculated separately for each project and trainer
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>PROJECT</th>
+                        <th>TRAINER</th>
+                        <th>SCHEDULED DAYS</th>
+                        <th>PRESENT</th>
+                        <th>LATE</th>
+                        <th>ABSENT</th>
+                        <th>LEAVE</th>
+                        <th>ATTENDANCE</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in project_trainer_summaries %}
+
+                    <tr>
+
+                        <!-- PROJECT -->
+
+                        <td>
+
+                            {% if item.project %}
+
+                                <div class="project-summary">
+
+                                    <strong>
+                                        {{ item.project.project_name }}
+                                    </strong>
+
+                                    <small>
+                                        {{ item.project.project_code }}
+                                    </small>
+
+                                </div>
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- TRAINER -->
+
+                        <td>
+
+                            {% if item.trainer %}
+
+                                <div class="trainer">
+
+                                    <div class="avatar">
+                                        {{ item.trainer.full_name[0]|upper }}
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+                                            {{ item.trainer.full_name }}
+                                        </strong>
+
+                                        <small>
+                                            {{ item.trainer.location or "—" }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {{ item.total_days }}
+                        </td>
+
+                        <td>
+                            {{ item.present }}
+                        </td>
+
+                        <td>
+                            {{ item.late }}
+                        </td>
+
+                        <td>
+                            {{ item.absent }}
+                        </td>
+
+                        <td>
+                            {{ item.leave }}
+                        </td>
+
+                        <td>
+
+                            <strong class="percentage">
+                                {{ item.percentage }}%
+                            </strong>
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="empty"
+                        >
+
+                            <i data-lucide="clipboard-x"></i>
+
+                            <h3>
+                                No attendance data
+                            </h3>
+
+                            <p>
+                                No project-wise trainer attendance is available.
+                            </p>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ========================================================
+     ATTENDANCE MODAL
+     ======================================================== -->
+
+<div
+    class="modal"
+    id="attendanceModal"
+>
+
+    <div class="modal-background"></div>
+
+
+    <div class="modal-box">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="modalHeading">
+                    Mark Attendance
+                </h2>
+
+                <p id="modalSession">
+                    Training Session
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                id="closeModal"
+                class="close-button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('attendance') }}"
+            id="attendanceForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <input
+                type="hidden"
+                name="schedule_id"
+                id="scheduleId"
+            >
+
+            <input
+                type="hidden"
+                name="attendance_date"
+                id="attendanceDate"
+            >
+
+
+            <div class="modal-body">
+
+                <div class="summary">
+
+                    <div>
+                        <span>Trainer</span>
+                        <strong id="modalTrainer">
+                            —
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Date</span>
+                        <strong id="modalDate">
+                            —
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="field">
+
+                    <label>
+                        Attendance Status
+                    </label>
+
+                    <div class="status-options">
+
+                        <label>
+                            <input
+                                type="radio"
+                                name="status"
+                                value="PRESENT"
+                                required
+                            >
+                            <span>Present</span>
+                        </label>
+
+                        <label>
+                            <input
+                                type="radio"
+                                name="status"
+                                value="LATE"
+                            >
+                            <span>Late</span>
+                        </label>
+
+                        <label>
+                            <input
+                                type="radio"
+                                name="status"
+                                value="ABSENT"
+                            >
+                            <span>Absent</span>
+                        </label>
+
+                        <label>
+                            <input
+                                type="radio"
+                                name="status"
+                                value="LEAVE"
+                            >
+                            <span>Leave</span>
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TIME -->
+
+                <div class="two-columns">
+
+                    <div class="field">
+
+                        <label>
+                            Check-in
+                        </label>
+
+                        <input
+                            type="time"
+                            name="check_in"
+                            id="checkIn"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Check-out
+                        </label>
+
+                        <input
+                            type="time"
+                            name="check_out"
+                            id="checkOut"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- REMARKS -->
+
+                <div class="field">
+
+                    <label>
+                        Remarks
+                    </label>
+
+                    <textarea
+                        name="remarks"
+                        id="remarks"
+                        rows="4"
+                        maxlength="2000"
+                        placeholder="Optional remarks..."
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    id="cancelModal"
+                    class="secondary-button"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    <i data-lucide="save"></i>
+                    Save Attendance
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/attendance.js') }}"
+></script>
+
+{% endblock %}

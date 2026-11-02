@@ -1,0 +1,1 @@
+console.log("QT Platform login page loaded.");

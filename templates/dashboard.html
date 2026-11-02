@@ -1,0 +1,741 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - QT Platform{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-page">
+
+    <!-- Subtle background -->
+    <div class="dashboard-background" aria-hidden="true">
+        <div class="background-grid"></div>
+        <div class="background-glow"></div>
+        <div class="background-image"></div>
+    </div>
+
+
+    <!-- =========================================================
+         HEADER
+    ========================================================== -->
+
+    <section class="dashboard-header">
+
+        <div class="header-content">
+
+            <span class="header-label">
+                QT PLATFORM
+            </span>
+
+            <h1>
+                <span id="greetingText">Good morning</span>,
+                <span class="user-name">
+                    {{ user.full_name if user else 'User' }}
+                </span>
+            </h1>
+
+            <p>
+                Manage training operations, trainers and requirements
+                from one central workspace.
+            </p>
+
+        </div>
+
+
+        <div class="header-meta">
+
+            <div class="date-box">
+
+                <div class="date-icon">
+                    <i data-lucide="calendar-days"></i>
+                </div>
+
+                <div class="date-content">
+                    <span>Today</span>
+                    <strong id="currentDate">Loading...</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         KPI CARDS
+    ========================================================== -->
+
+    <section class="kpi-grid">
+
+        <!-- Total Trainers -->
+
+        <article class="kpi-card">
+
+            <div class="kpi-header">
+
+                <div class="kpi-icon blue">
+                    <i data-lucide="users"></i>
+                </div>
+
+                <span class="kpi-title">
+                    Total Trainers
+                </span>
+
+            </div>
+
+            <div class="kpi-value">
+                {{ total_trainers or 0 }}
+            </div>
+
+            <div class="kpi-footer">
+                <span class="status-dot"></span>
+                Trainer profiles
+            </div>
+
+        </article>
+
+
+        <!-- Active Requirements -->
+
+        <article class="kpi-card">
+
+            <div class="kpi-header">
+
+                <div class="kpi-icon purple">
+                    <i data-lucide="clipboard-list"></i>
+                </div>
+
+                <span class="kpi-title">
+                    Active Requirements
+                </span>
+
+            </div>
+
+            <div class="kpi-value">
+                {{ active_requirements or 0 }}
+            </div>
+
+            <div class="kpi-footer">
+                <span class="status-dot purple-dot"></span>
+                Current requirements
+            </div>
+
+        </article>
+
+
+        <!-- Active Projects -->
+
+        <article class="kpi-card">
+
+            <div class="kpi-header">
+
+                <div class="kpi-icon green">
+                    <i data-lucide="briefcase"></i>
+                </div>
+
+                <span class="kpi-title">
+                    Active Projects
+                </span>
+
+            </div>
+
+            <div class="kpi-value">
+                {{ active_projects or 0 }}
+            </div>
+
+            <div class="kpi-footer">
+                <span class="status-dot green-dot"></span>
+                Projects in progress
+            </div>
+
+        </article>
+
+
+        <!-- Upcoming Sessions -->
+
+<article class="kpi-card">
+
+    <div class="kpi-header">
+
+        <div class="kpi-icon orange">
+            <i data-lucide="calendar-clock"></i>
+        </div>
+
+        <span class="kpi-title">
+            Upcoming Sessions
+        </span>
+
+    </div>
+
+    <div class="kpi-value">
+        {{ upcoming_sessions or 0 }}
+    </div>
+
+    <div class="kpi-footer">
+        <span class="status-dot orange-dot"></span>
+        Scheduled sessions
+    </div>
+
+</article>
+
+    </section>
+
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
+    <section class="dashboard-grid">
+
+
+        <!-- =====================================================
+             TRAINING OVERVIEW
+        ====================================================== -->
+
+        <article class="dashboard-card overview-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        OVERVIEW
+                    </span>
+
+                    <h2>
+                        Training Overview
+                    </h2>
+
+                    <p>
+                        Training activity will appear here as the
+                        platform grows.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="period-button"
+                    id="periodButton"
+                >
+                    This Year
+                    <i data-lucide="chevron-down"></i>
+                </button>
+
+            </div>
+
+
+            <div class="overview-summary">
+
+                <div>
+
+                    <strong>
+                        {{ total_trainers or 0 }}
+                    </strong>
+
+                    <span>
+                        trainers currently registered
+                    </span>
+
+                </div>
+
+                <div class="chart-legend">
+
+                    <span>
+                        <i class="legend-blue"></i>
+                        Training activity
+                    </span>
+
+                    <span>
+                        <i class="legend-gray"></i>
+                        Sessions
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <div class="chart-y-axis">
+                    <span>100</span>
+                    <span>75</span>
+                    <span>50</span>
+                    <span>25</span>
+                    <span>0</span>
+                </div>
+
+
+                <div class="chart">
+
+                    <div class="chart-grid">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+
+                    <svg
+                        class="line-chart"
+                        viewBox="0 0 800 240"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                    >
+
+                        <path
+                            class="chart-area"
+                            d="
+                                M0 200
+                                C45 198 65 190 100 193
+                                C140 196 155 165 195 170
+                                C235 175 250 180 290 155
+                                C330 130 345 140 385 132
+                                C425 124 440 150 475 134
+                                C515 116 530 94 570 101
+                                C610 108 630 80 665 87
+                                C705 94 730 66 760 70
+                                C780 72 795 56 800 52
+                                L800 240
+                                L0 240
+                                Z
+                            "
+                        ></path>
+
+
+                        <path
+                            class="chart-line"
+                            d="
+                                M0 200
+                                C45 198 65 190 100 193
+                                C140 196 155 165 195 170
+                                C235 175 250 180 290 155
+                                C330 130 345 140 385 132
+                                C425 124 440 150 475 134
+                                C515 116 530 94 570 101
+                                C610 108 630 80 665 87
+                                C705 94 730 66 760 70
+                                C780 72 795 56 800 52
+                            "
+                        ></path>
+
+                    </svg>
+
+
+                    <div class="chart-x-axis">
+                        <span>Jan</span>
+                        <span>Feb</span>
+                        <span>Mar</span>
+                        <span>Apr</span>
+                        <span>May</span>
+                        <span>Jun</span>
+                        <span>Jul</span>
+                        <span>Aug</span>
+                        <span>Sep</span>
+                        <span>Oct</span>
+                        <span>Nov</span>
+                        <span>Dec</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             QUICK ACTIONS
+        ====================================================== -->
+
+        <article class="dashboard-card quick-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        ACTIONS
+                    </span>
+
+                    <h2>
+                        Quick Actions
+                    </h2>
+
+                    <p>
+                        Common platform operations
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-actions">
+
+                {% if user and user.role == "SUPER_ADMIN" %}
+
+                <a
+                    href="{{ url_for('users') }}"
+                    class="quick-action"
+                >
+
+                    <div class="action-icon">
+                        <i data-lucide="user-plus"></i>
+                    </div>
+
+                    <div class="action-content">
+
+                        <strong>
+                            Add User
+                        </strong>
+
+                        <span>
+                            Create a platform account
+                        </span>
+
+                    </div>
+
+                    <i
+                        data-lucide="chevron-right"
+                        class="action-arrow"
+                    ></i>
+
+                </a>
+
+                {% endif %}
+
+
+                <a
+                    href="{{ url_for('trainers') }}"
+                    class="quick-action"
+                >
+
+                    <div class="action-icon">
+                        <i data-lucide="graduation-cap"></i>
+                    </div>
+
+                    <div class="action-content">
+
+                        <strong>
+                            Manage Trainers
+                        </strong>
+
+                        <span>
+                            View and manage trainer profiles
+                        </span>
+
+                    </div>
+
+                    <i
+                        data-lucide="chevron-right"
+                        class="action-arrow"
+                    ></i>
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="quick-action coming-soon"
+                >
+
+                    <div class="action-icon">
+                        <i data-lucide="clipboard-plus"></i>
+                    </div>
+
+                    <div class="action-content">
+
+                        <strong>
+                            New Requirement
+                        </strong>
+
+                        <span>
+                            Create a training requirement
+                        </span>
+
+                    </div>
+
+                    <i
+                        data-lucide="chevron-right"
+                        class="action-arrow"
+                    ></i>
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="quick-action coming-soon"
+                >
+
+                    <div class="action-icon">
+                        <i data-lucide="calendar-plus"></i>
+                    </div>
+
+                    <div class="action-content">
+
+                        <strong>
+                            Schedule Training
+                        </strong>
+
+                        <span>
+                            Plan a training session
+                        </span>
+
+                    </div>
+
+                    <i
+                        data-lucide="chevron-right"
+                        class="action-arrow"
+                    ></i>
+
+                </a>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             UPCOMING TRAININGS
+        ====================================================== -->
+
+        <article class="dashboard-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        SCHEDULE
+                    </span>
+
+                    <h2>
+                        Upcoming Trainings
+                    </h2>
+
+                    <p>
+                        Scheduled training activities
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="text-button coming-soon"
+                >
+                    View all
+                    <i data-lucide="arrow-right"></i>
+                </button>
+
+            </div>
+
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    <i data-lucide="calendar"></i>
+                </div>
+
+                <h3>
+                    No upcoming trainings
+                </h3>
+
+                <p>
+                    Scheduled training sessions will appear here.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             RECENT ACTIVITY
+        ====================================================== -->
+
+        <article class="dashboard-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        ACTIVITY
+                    </span>
+
+                    <h2>
+                        Recent Activity
+                    </h2>
+
+                    <p>
+                        Latest platform activity
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="activity-list">
+
+                {% if total_trainers and total_trainers > 0 %}
+
+                <div class="activity-item">
+
+                    <div class="activity-icon blue">
+                        <i data-lucide="user-check"></i>
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Trainer profiles available
+                        </strong>
+
+                        <span>
+                            {{ total_trainers }}
+                            trainer profile(s) registered.
+                        </span>
+
+                    </div>
+
+                </div>
+
+                {% else %}
+
+                <div class="activity-item">
+
+                    <div class="activity-icon gray">
+                        <i data-lucide="info"></i>
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Platform is ready
+                        </strong>
+
+                        <span>
+                            Add your first trainer to get started.
+                        </span>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon green">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Secure session active
+                        </strong>
+
+                        <span>
+                            Your account is securely authenticated.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             AI ASSISTANT
+        ====================================================== -->
+
+        <article class="ai-card">
+
+            <div class="ai-content">
+
+                <span class="ai-label">
+                    QT INTELLIGENCE
+                </span>
+
+                <h2>
+                    Training intelligence,
+                    <br>
+                    when you need it.
+                </h2>
+
+                <p>
+                    Use the AI assistant to understand training
+                    operations, requirements, trainers and projects.
+                </p>
+
+                <button
+                    type="button"
+                    class="ai-button coming-soon"
+                >
+                    Open AI Assistant
+                    <i data-lucide="arrow-up-right"></i>
+                </button>
+
+            </div>
+
+
+            <div class="ai-visual" aria-hidden="true">
+
+                <div class="ai-ring ring-one"></div>
+                <div class="ai-ring ring-two"></div>
+
+                <div class="ai-center">
+                    <i data-lucide="sparkles"></i>
+                </div>
+
+                <span class="ai-point point-one"></span>
+                <span class="ai-point point-two"></span>
+                <span class="ai-point point-three"></span>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            QT Platform
+        </span>
+
+        <span class="footer-separator">•</span>
+
+        <span>
+            Quality Training Management
+        </span>
+
+    </footer>
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

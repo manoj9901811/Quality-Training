@@ -1,0 +1,1328 @@
+{% extends "base.html" %}
+
+{% block title %}
+Communication | QT Platform
+{% endblock %}
+
+{% block page_title %}
+Communication
+{% endblock %}
+
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/communication.css') }}?v=201"
+>
+
+<style>
+    /* =========================================================
+   COMMUNICATION PAGE
+   ========================================================= */
+
+.communication-page {
+    height: calc(100vh - 120px);
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   TOP TOOLBAR
+   ========================================================= */
+
+.communication-toolbar {
+    flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   CHAT SHELL
+   IMPORTANT:
+   DO NOT USE height: 100% HERE
+   ========================================================= */
+
+.chat-shell {
+    flex: 1 1 auto;
+
+    min-height: 0;
+    min-width: 0;
+
+    display: flex;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   LEFT CONVERSATION PANEL
+   ========================================================= */
+
+.conversation-panel {
+    flex: 0 0 auto;
+
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+/* Fixed left-panel sections */
+
+.conversation-header,
+.chat-search,
+.chat-tabs {
+    flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   CONVERSATION LIST
+   ONLY THIS LEFT AREA SCROLLS
+   ========================================================= */
+
+.conversation-list {
+    flex: 1 1 auto;
+
+    min-height: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-gutter: stable;
+}
+
+
+/* Left scrollbar */
+
+.conversation-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.conversation-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.conversation-list::-webkit-scrollbar-thumb {
+    background: #c7c7c7;
+    border-radius: 10px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.conversation-list {
+    scrollbar-width: thin;
+    scrollbar-color: #c7c7c7 transparent;
+}
+
+
+/* =========================================================
+   RIGHT CHAT PANEL
+   ========================================================= */
+
+.chat-panel {
+    flex: 1 1 auto;
+
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   ACTIVE CHAT
+   ========================================================= */
+
+.active-chat {
+    flex: 1 1 auto;
+
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   CHAT HEADER
+   FIXED
+   ========================================================= */
+
+.chat-header {
+    flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   MESSAGE AREA
+   THIS IS THE ONLY MAIN CHAT SCROLL AREA
+   ========================================================= */
+
+.message-area {
+    flex: 1 1 auto;
+
+    min-width: 0;
+    min-height: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding: 16px 20px;
+
+    scroll-behavior: smooth;
+
+    overscroll-behavior: contain;
+
+    scrollbar-gutter: stable;
+}
+
+
+/* =========================================================
+   MESSAGE SCROLLBAR
+   ========================================================= */
+
+.message-area::-webkit-scrollbar {
+    width: 7px;
+}
+
+.message-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.message-area::-webkit-scrollbar-thumb {
+    background: #c7c7c7;
+    border-radius: 10px;
+}
+
+.message-area::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.message-area {
+    scrollbar-width: thin;
+    scrollbar-color: #c7c7c7 transparent;
+}
+
+
+/* =========================================================
+   ATTACHMENT PREVIEW
+   FIXED ABOVE COMPOSER
+   ========================================================= */
+
+.attachment-preview {
+    flex: 0 0 auto;
+
+    max-height: 100px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   MESSAGE COMPOSER
+   FIXED AT BOTTOM
+   ========================================================= */
+
+.message-composer {
+    flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   TEXTAREA
+   ========================================================= */
+
+.message-composer textarea {
+    max-height: 120px;
+
+    overflow-y: auto;
+}
+
+
+/* =========================================================
+   MESSAGE ROW
+   ========================================================= */
+
+.message-row {
+    width: 100%;
+
+    display: flex;
+
+    margin-bottom: 10px;
+}
+
+.message-row.sent {
+    justify-content: flex-end;
+}
+
+.message-row.received {
+    justify-content: flex-start;
+}
+
+
+/* =========================================================
+   MESSAGE BUBBLE
+   ========================================================= */
+
+.message-bubble {
+    max-width: 70%;
+
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   MESSAGE TEXT
+   ========================================================= */
+
+.message-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   MESSAGE IMAGE
+   ========================================================= */
+
+.message-image {
+    max-width: 280px;
+    max-height: 280px;
+
+    object-fit: contain;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   ATTACHMENT
+   ========================================================= */
+
+.message-attachment {
+    max-width: 100%;
+}
+
+.message-file {
+    max-width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+/* =========================================================
+   MESSAGE META
+   ========================================================= */
+
+.message-meta {
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 4px;
+
+    margin-top: 4px;
+}
+
+
+/* =========================================================
+   TODAY LABEL
+   ========================================================= */
+
+.today-label {
+    position: sticky;
+
+    top: 0;
+
+    z-index: 5;
+
+    width: fit-content;
+
+    margin: 0 auto 16px auto;
+
+    padding: 5px 12px;
+
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.90);
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   CHAT WELCOME
+   ========================================================= */
+
+.chat-welcome {
+    flex: 1 1 auto;
+
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   DESKTOP
+   ========================================================= */
+
+@media (min-width: 769px) {
+
+    .communication-page {
+        height: calc(100vh - 120px);
+        min-height: 0;
+    }
+
+    .chat-shell {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+    .communication-page {
+        height: calc(100vh - 110px);
+    }
+
+    .message-area {
+        padding: 14px;
+    }
+
+    .message-bubble {
+        max-width: 78%;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .communication-page {
+        height: calc(100vh - 90px);
+
+        overflow: hidden;
+    }
+
+    .chat-shell {
+        min-height: 0;
+    }
+
+    .message-area {
+        padding: 12px;
+    }
+
+    .message-bubble {
+        max-width: 85%;
+    }
+
+    .message-image {
+        max-width: 220px;
+        max-height: 220px;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .communication-page {
+        height: calc(100vh - 80px);
+    }
+
+    .message-area {
+        padding: 10px;
+    }
+
+    .message-bubble {
+        max-width: 90%;
+    }
+
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="communication-page">
+
+    <!-- =========================================================
+         TOP TOOLBAR
+    ========================================================== -->
+
+    <div class="communication-toolbar">
+
+        <div class="communication-breadcrumb">
+
+            <span>Dashboard</span>
+
+            <i data-lucide="chevron-right"></i>
+
+            <strong>Communication</strong>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="communication-new-btn"
+            id="newMessageButton"
+        >
+
+            <i data-lucide="plus"></i>
+
+            New Message
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+    ========================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="communication-flash">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="communication-flash-message {{ category }}"
+                    >
+
+                        <i
+                            data-lucide="{% if category == 'success' %}circle-check{% else %}circle-alert{% endif %}"
+                        ></i>
+
+                        <span>
+                            {{ message }}
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         CHAT SHELL
+    ========================================================== -->
+
+    <div class="chat-shell">
+
+
+        <!-- =====================================================
+             LEFT SIDE
+        ====================================================== -->
+
+        <aside class="conversation-panel">
+
+
+            <!-- HEADER -->
+
+            <div class="conversation-header">
+
+                <div>
+
+                    <h2>
+                        Chats
+                    </h2>
+
+                    <span>
+                        {{ total_received + total_sent }}
+                        messages
+                    </span>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="small-compose-button"
+                    id="newMessageButtonSmall"
+                    title="New message"
+                >
+
+                    <i data-lucide="square-pen"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- SEARCH -->
+
+            <div class="chat-search">
+
+                <i data-lucide="search"></i>
+
+                <input
+                    type="search"
+                    id="conversationSearch"
+                    placeholder="Search conversations..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <!-- FILTER -->
+
+            <div class="chat-tabs">
+
+                <button
+                    type="button"
+                    class="chat-tab active"
+                    data-chat-filter="all"
+                >
+                    All
+                </button>
+
+
+                <button
+                    type="button"
+                    class="chat-tab"
+                    data-chat-filter="unread"
+                >
+                    Unread
+                </button>
+
+            </div>
+
+
+            <!-- CONVERSATION LIST -->
+
+            <div
+                class="conversation-list"
+                id="conversationList"
+            >
+
+                <div
+                    class="conversation-empty"
+                    id="conversationEmpty"
+                >
+
+                    <i data-lucide="message-square-off"></i>
+
+                    <strong>
+                        No conversations
+                    </strong>
+
+                    <span>
+                        Start a new conversation.
+                    </span>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             RIGHT CHAT PANEL
+        ====================================================== -->
+
+        <section class="chat-panel">
+
+
+            <!-- EMPTY CHAT -->
+
+            <div
+                class="chat-welcome"
+                id="chatWelcome"
+            >
+
+                <div class="welcome-icon">
+
+                    <i data-lucide="messages-square"></i>
+
+                </div>
+
+
+                <h2>
+                    Your conversations
+                </h2>
+
+
+                <p>
+                    Select a conversation from the left to start chatting.
+                </p>
+
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="welcomeNewMessage"
+                >
+
+                    <i data-lucide="plus"></i>
+
+                    New Message
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACTIVE CHAT
+            ================================================== -->
+
+            <div
+                class="active-chat"
+                id="activeChat"
+            >
+
+
+                <!-- =================================================
+                     CHAT HEADER
+                ================================================== -->
+
+                <div class="chat-header">
+
+                    <div class="chat-user">
+
+
+                        <div
+                            class="chat-avatar"
+                            id="chatAvatar"
+                        >
+
+                            U
+
+                            <span class="online-dot"></span>
+
+                        </div>
+
+
+                        <div class="chat-user-info">
+
+                            <strong id="chatUserName">
+                                Select a conversation
+                            </strong>
+
+                            <span id="chatUserRole">
+                                QT Platform User
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="chat-header-actions">
+
+                        <button
+                            type="button"
+                            id="searchMessagesButton"
+                            title="Search messages"
+                        >
+
+                            <i data-lucide="search"></i>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="callButton"
+                            title="Voice call"
+                        >
+
+                            <i data-lucide="phone"></i>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="conversationInfoButton"
+                            title="Conversation information"
+                        >
+
+                            <i data-lucide="info"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     MESSAGE AREA
+                     ONLY THIS AREA SCROLLS
+                ================================================== -->
+
+                <div
+                    class="message-area"
+                    id="messageArea"
+                >
+
+                    <div class="today-label">
+                        Today
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     ATTACHMENT PREVIEW
+                ================================================== -->
+
+                <div
+                    class="attachment-preview"
+                    id="attachmentPreview"
+                ></div>
+
+
+                <!-- =================================================
+                     MESSAGE COMPOSER
+                ================================================== -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for('communication') }}"
+                    class="message-composer"
+                    id="messageComposer"
+                    enctype="multipart/form-data"
+                >
+
+                    <!-- CSRF -->
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token }}"
+                    >
+
+
+                    <!-- ACTION -->
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="send"
+                    >
+
+
+                    <!-- RECEIVER -->
+
+                    <input
+                        type="hidden"
+                        name="receiver_id"
+                        id="chatReceiverId"
+                    >
+
+
+                    <!-- SUBJECT -->
+
+                    <input
+                        type="hidden"
+                        name="subject"
+                        id="chatSubject"
+                        value="Chat Message"
+                    >
+
+
+                    <!-- PRIORITY -->
+
+                    <input
+                        type="hidden"
+                        name="priority"
+                        value="NORMAL"
+                    >
+
+
+                    <!-- =================================================
+                         PAPERCLIP
+                    ================================================== -->
+
+                    <button
+                        type="button"
+                        class="attachment-button"
+                        id="attachmentButton"
+                        title="Attach file"
+                    >
+
+                        <i data-lucide="paperclip"></i>
+
+                    </button>
+
+
+                    <!-- REAL FILE INPUT -->
+
+                    <input
+                        type="file"
+                        id="chatFile"
+                        name="attachment"
+                        class="chat-file-input"
+                    >
+
+
+                    <!-- =================================================
+                         MESSAGE INPUT
+                    ================================================== -->
+
+                    <textarea
+                        name="message"
+                        id="chatMessage"
+                        rows="1"
+                        maxlength="5000"
+                        placeholder="Type a message..."
+                    ></textarea>
+
+
+                    <!-- EMOJI -->
+
+                    <button
+                        type="button"
+                        class="emoji-button"
+                        id="emojiButton"
+                        title="Emoji"
+                    >
+
+                        <i data-lucide="smile"></i>
+
+                    </button>
+
+
+                    <!-- SEND -->
+
+                    <button
+                        type="submit"
+                        class="send-button"
+                        title="Send message"
+                    >
+
+                        <i data-lucide="send"></i>
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <!-- =========================================================
+         NEW MESSAGE MODAL
+    ========================================================== -->
+
+    <div
+        class="communication-modal"
+        id="composeModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-background"
+            id="modalBackground"
+        ></div>
+
+
+        <div class="modal-box">
+
+
+            <!-- MODAL HEADER -->
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        New Message
+                    </h2>
+
+                    <p>
+                        Start a conversation with a QT Platform user.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="modalClose"
+                >
+
+                    <i data-lucide="x"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- MODAL FORM -->
+
+            <form
+                method="POST"
+                action="{{ url_for('communication') }}"
+                id="newMessageForm"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="send"
+                >
+
+
+                <div class="modal-body">
+
+
+                    <!-- RECIPIENT -->
+
+                    <div class="form-group">
+
+                        <label for="newReceiver">
+                            Recipient
+                            <span>*</span>
+                        </label>
+
+
+                        <div class="input-with-icon">
+
+                            <i data-lucide="user"></i>
+
+
+                            <select
+                                name="receiver_id"
+                                id="newReceiver"
+                                required
+                            >
+
+                                <option value="">
+                                    Select recipient
+                                </option>
+
+
+                                {% for user_item in message_users %}
+
+                                    <option
+                                        value="{{ user_item.id }}"
+                                    >
+
+                                        {{ user_item.full_name }}
+                                        —
+                                        {{ user_item.role }}
+
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUBJECT -->
+
+                    <div class="form-group">
+
+                        <label for="newSubject">
+
+                            Subject
+
+                            <span>*</span>
+
+                        </label>
+
+
+                        <div class="input-with-icon">
+
+                            <i data-lucide="heading"></i>
+
+
+                            <input
+                                type="text"
+                                name="subject"
+                                id="newSubject"
+                                maxlength="250"
+                                value="Chat Message"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PRIORITY -->
+
+                    <div class="form-group">
+
+                        <label for="newPriority">
+                            Priority
+                        </label>
+
+
+                        <div class="input-with-icon">
+
+                            <i data-lucide="flag"></i>
+
+
+                            <select
+                                name="priority"
+                                id="newPriority"
+                            >
+
+                                <option value="NORMAL">
+                                    Normal
+                                </option>
+
+                                <option value="IMPORTANT">
+                                    Important
+                                </option>
+
+                                <option value="URGENT">
+                                    Urgent
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MESSAGE -->
+
+                    <div class="form-group">
+
+                        <label for="newMessage">
+
+                            Message
+
+                            <span>*</span>
+
+                        </label>
+
+
+                        <textarea
+                            name="message"
+                            id="newMessage"
+                            rows="6"
+                            maxlength="5000"
+                            placeholder="Write your message..."
+                            required
+                        ></textarea>
+
+
+                        <div class="character-count">
+
+                            <span id="newMessageCount">
+                                0
+                            </span>
+
+                            / 5000
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="modalCancel"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+
+                        <i data-lucide="send"></i>
+
+                        Send Message
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         SERVER MESSAGE DATA
+    ========================================================== -->
+
+    <div
+        id="communicationData"
+        hidden
+    >
+
+
+        <!-- RECEIVED -->
+
+        {% for communication in received_messages %}
+
+            <div
+                class="message-data"
+
+                data-id="{{ communication.id }}"
+
+                data-type="received"
+
+                data-partner-id="{{ communication.sender_id }}"
+
+                data-partner-name="{{ communication.sender.full_name if communication.sender else 'System' }}"
+
+                data-partner-role="{{ communication.sender.role if communication.sender else 'System' }}"
+
+                data-subject="{{ communication.subject }}"
+
+                data-message="{{ communication.message }}"
+
+                data-priority="{{ communication.priority }}"
+
+                data-read="{{ 'true' if communication.is_read else 'false' }}"
+
+                data-created="{{ communication.created_at.strftime('%d %b %Y, %I:%M %p') if communication.created_at else '' }}"
+
+                data-attachment-name="{{ communication.attachment_name or '' if communication.attachment_name is defined else '' }}"
+
+                data-attachment-path="{{ communication.attachment_path or '' if communication.attachment_path is defined else '' }}"
+
+                data-attachment-type="{{ communication.attachment_type or '' if communication.attachment_type is defined else '' }}"
+
+                data-attachment-size="{{ communication.attachment_size or 0 if communication.attachment_size is defined else 0 }}"
+            ></div>
+
+        {% endfor %}
+
+
+        <!-- SENT -->
+
+        {% for communication in sent_messages %}
+
+            <div
+                class="message-data"
+
+                data-id="{{ communication.id }}"
+
+                data-type="sent"
+
+                data-partner-id="{{ communication.receiver_id }}"
+
+                data-partner-name="{{ communication.receiver.full_name if communication.receiver else 'User' }}"
+
+                data-partner-role="{{ communication.receiver.role if communication.receiver else 'User' }}"
+
+                data-subject="{{ communication.subject }}"
+
+                data-message="{{ communication.message }}"
+
+                data-priority="{{ communication.priority }}"
+
+                data-read="true"
+
+                data-created="{{ communication.created_at.strftime('%d %b %Y, %I:%M %p') if communication.created_at else '' }}"
+
+                data-attachment-name="{{ communication.attachment_name or '' if communication.attachment_name is defined else '' }}"
+
+                data-attachment-path="{{ communication.attachment_path or '' if communication.attachment_path is defined else '' }}"
+
+                data-attachment-type="{{ communication.attachment_type or '' if communication.attachment_type is defined else '' }}"
+
+                data-attachment-size="{{ communication.attachment_size or 0 if communication.attachment_size is defined else 0 }}"
+            ></div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/communication.js') }}?v=202"
+></script>
+
+{% endblock %}

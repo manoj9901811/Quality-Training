@@ -1,0 +1,936 @@
+{% extends "base.html" %}
+
+{% block title %}
+Trainer Management - QT Platform
+{% endblock %}
+
+{% block page_title %}
+Trainer Management
+{% endblock %}
+
+{% block css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/trainers.css') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div class="trainers-page">
+
+    <!-- BACKGROUND -->
+    <div class="background-decoration decoration-one"></div>
+    <div class="background-decoration decoration-two"></div>
+
+    <div class="background-dots dots-one"></div>
+    <div class="background-dots dots-two"></div>
+
+
+    <!-- BREADCRUMB -->
+    <div class="page-breadcrumb">
+        <span>Dashboard</span>
+        <i data-lucide="chevron-right"></i>
+        <strong>Trainer Management</strong>
+    </div>
+
+
+    <!-- PAGE HEADER -->
+    <div class="page-heading">
+
+        <div>
+            <h1>Trainer Management</h1>
+
+            <p>
+                Manage trainer profiles, skills,
+                availability and login access.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="primary-button"
+            onclick="openTrainerModal()"
+        >
+            <i data-lucide="plus"></i>
+            Add Trainer
+        </button>
+
+    </div>
+
+
+    <!-- FLASH MESSAGES -->
+    {% with messages =
+        get_flashed_messages(with_categories=true)
+    %}
+
+        {% if messages %}
+
+            <div class="messages">
+
+                {% for category, message in messages %}
+
+                    <div class="message {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- STATISTICS -->
+    <div class="trainer-stats">
+
+        <!-- TOTAL -->
+        <div class="trainer-stat-card total">
+
+            <div class="trainer-stat-icon">
+                <i data-lucide="users"></i>
+            </div>
+
+            <div class="trainer-stat-content">
+
+                <span class="trainer-stat-label">
+                    Total Trainers
+                </span>
+
+                <span class="trainer-stat-value">
+                    {{ trainers|length }}
+                </span>
+
+            </div>
+
+            <span class="trainer-stat-note">
+                Current
+            </span>
+
+        </div>
+
+
+        <!-- ACTIVE -->
+        <div class="trainer-stat-card active">
+
+            <div class="trainer-stat-icon">
+                <i data-lucide="user-check"></i>
+            </div>
+
+            <div class="trainer-stat-content">
+
+                <span class="trainer-stat-label">
+                    Active Trainers
+                </span>
+
+                <span class="trainer-stat-value">
+                    {{
+                        trainers
+                        |selectattr(
+                            "trainer_status",
+                            "equalto",
+                            "ACTIVE"
+                        )
+                        |list
+                        |length
+                    }}
+                </span>
+
+            </div>
+
+            <span class="trainer-stat-note">
+                Active
+            </span>
+
+        </div>
+
+
+        <!-- AVAILABLE -->
+        <div class="trainer-stat-card available">
+
+            <div class="trainer-stat-icon">
+                <i data-lucide="calendar-check"></i>
+            </div>
+
+            <div class="trainer-stat-content">
+
+                <span class="trainer-stat-label">
+                    Available
+                </span>
+
+                <span class="trainer-stat-value">
+                    {{
+                        trainers
+                        |selectattr(
+                            "availability",
+                            "equalto",
+                            "AVAILABLE"
+                        )
+                        |list
+                        |length
+                    }}
+                </span>
+
+            </div>
+
+            <span class="trainer-stat-note">
+                Ready
+            </span>
+
+        </div>
+
+
+        <!-- LOGIN CREATED -->
+        <div class="trainer-stat-card login">
+
+            <div class="trainer-stat-icon">
+                <i data-lucide="key-round"></i>
+            </div>
+
+            <div class="trainer-stat-content">
+
+                <span class="trainer-stat-label">
+                    Login Created
+                </span>
+
+                <span class="trainer-stat-value">
+                    {{
+                        trainers
+                        |selectattr("user_id")
+                        |list
+                        |length
+                    }}
+                </span>
+
+            </div>
+
+            <span class="trainer-stat-note">
+                Accounts
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- TRAINERS CARD -->
+    <div class="trainers-card">
+
+        <!-- TABLE HEADER -->
+        <div class="table-header">
+
+            <div class="table-header-left">
+
+                <div class="table-header-icon">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+
+                <div>
+                    <h3>Trainers</h3>
+
+                    <p>
+                        Manage trainer profiles and
+                        availability.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- SEARCH + FILTER -->
+            <div class="table-tools">
+
+                <div class="table-search">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        id="trainerSearch"
+                        placeholder="Search trainers, skills or location..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+                <select
+                    id="availabilityFilter"
+                    class="availability-filter"
+                >
+
+                    <option value="">
+                        All Availability
+                    </option>
+
+                    <option value="AVAILABLE">
+                        Available
+                    </option>
+
+                    <option value="BUSY">
+                        Busy
+                    </option>
+
+                    <option value="UNAVAILABLE">
+                        Unavailable
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- TABLE -->
+        <div class="table-wrapper">
+
+            <table id="trainersTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Trainer</th>
+                        <th>Contact</th>
+                        <th>Skills</th>
+                        <th>Experience</th>
+                        <th>Rate</th>
+                        <th>Availability</th>
+                        <th>Login</th>
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for trainer in trainers %}
+
+                    <tr
+                        class="trainer-row"
+                        data-availability="{{ trainer.availability }}"
+                        data-status="{{ trainer.trainer_status }}"
+                    >
+
+                        <!-- TRAINER -->
+                        <td>
+
+                            <div class="table-user">
+
+                                <div class="table-avatar">
+
+                                    {% if trainer.full_name %}
+                                        {{ trainer.full_name[0] | upper }}
+                                    {% else %}
+                                        T
+                                    {% endif %}
+
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        {{ trainer.full_name }}
+                                    </strong>
+
+                                    <span class="trainer-id">
+                                        Trainer ID: {{ trainer.id }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- CONTACT -->
+                        <td>
+
+                            <div class="contact-info">
+
+                                {% if trainer.phone %}
+
+                                    <span>
+                                        <i data-lucide="phone"></i>
+                                        {{ trainer.phone }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="muted">
+                                        Phone not added
+                                    </span>
+
+                                {% endif %}
+
+                                <span>
+                                    <i data-lucide="map-pin"></i>
+
+                                    {% if trainer.location %}
+                                        {{ trainer.location }}
+                                    {% else %}
+                                        Location not added
+                                    {% endif %}
+
+                                </span>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- SKILLS -->
+                        <td>
+
+                            <div class="skills-cell">
+
+                                {% if trainer.skills %}
+
+                                    {% for skill in trainer.skills.split(",")[:3] %}
+
+                                        <span class="skill-badge">
+                                            {{ skill.strip() }}
+                                        </span>
+
+                                    {% endfor %}
+
+                                    {% if trainer.skills.split(",")|length > 3 %}
+
+                                        <span class="skill-more">
+                                            +{{ trainer.skills.split(",")|length - 3 }}
+                                        </span>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <span class="muted">
+                                        No skills added
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- EXPERIENCE -->
+                        <td>
+
+                            <div class="experience-value">
+
+                                <strong>
+                                    {{ trainer.experience_years }}
+                                </strong>
+
+                                <span>years</span>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- RATE -->
+                        <td>
+
+                            <div class="rate-value">
+
+                                <strong>
+                                    ₹{{ "%.2f"|format(trainer.hourly_rate or 0) }}
+                                </strong>
+
+                                <span>/hr</span>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- AVAILABILITY -->
+                        <td>
+
+                            {% if trainer.availability == "AVAILABLE" %}
+
+                                <span class="availability-badge availability-available">
+                                    <span class="availability-dot"></span>
+                                    Available
+                                </span>
+
+                            {% elif trainer.availability == "BUSY" %}
+
+                                <span class="availability-badge availability-busy">
+                                    <span class="availability-dot"></span>
+                                    Busy
+                                </span>
+
+                            {% else %}
+
+                                <span class="availability-badge availability-unavailable">
+                                    <span class="availability-dot"></span>
+                                    Unavailable
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- LOGIN -->
+                        <td>
+
+                            {% if trainer.user_id and trainer.user %}
+
+                                {% if trainer.user.is_active %}
+
+                                    <div class="login-info">
+
+                                        <span class="status-badge active">
+                                            <span class="status-dot"></span>
+                                            Active Login
+                                        </span>
+
+                                        <small class="login-email">
+                                            {{ trainer.user.email }}
+                                        </small>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="login-info">
+
+                                        <span class="status-badge inactive">
+                                            <span class="status-dot"></span>
+                                            Login Inactive
+                                        </span>
+
+                                        <small class="login-email">
+                                            {{ trainer.user.email }}
+                                        </small>
+
+                                    </div>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="login-not-created">
+                                    <i data-lucide="user-round-x"></i>
+                                    Login not created
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+                        <td>
+
+                            {% if trainer.trainer_status == "ACTIVE" %}
+
+                                <span class="status-badge active">
+                                    <span class="status-dot"></span>
+                                    Active
+                                </span>
+
+                            {% else %}
+
+                                <span class="status-badge inactive">
+                                    <span class="status-dot"></span>
+                                    Inactive
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="empty-table"
+                        >
+
+                            <div class="empty-state">
+
+                                <div class="empty-icon">
+                                    <i data-lucide="graduation-cap"></i>
+                                </div>
+
+                                <h4>
+                                    No trainers yet
+                                </h4>
+
+                                <p>
+                                    Add your first trainer
+                                    to get started.
+                                </p>
+
+                                <button
+                                    type="button"
+                                    class="primary-button"
+                                    onclick="openTrainerModal()"
+                                >
+                                    <i data-lucide="plus"></i>
+                                    Add Trainer
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- FOOTER -->
+        <div class="trainers-table-footer">
+
+            <span id="trainerResultMessage">
+                Showing 1 to {{ trainers|length }}
+                of {{ trainers|length }} trainers
+            </span>
+
+            <div class="pagination">
+
+                <button
+                    type="button"
+                    disabled
+                    aria-label="Previous page"
+                >
+                    <i data-lucide="chevron-left"></i>
+                </button>
+
+                <button
+                    type="button"
+                    class="active"
+                >
+                    1
+                </button>
+
+                <button
+                    type="button"
+                    disabled
+                    aria-label="Next page"
+                >
+                    <i data-lucide="chevron-right"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     TRAINER MODAL
+     IMPORTANT:
+     This is OUTSIDE .trainers-page
+     so it can cover the entire dashboard.
+========================================================= -->
+
+<div
+    id="trainerModal"
+    class="modal-overlay"
+    hidden
+    aria-hidden="true"
+>
+
+    <div class="modal">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+
+            <div class="modal-title-area">
+
+                <div class="modal-icon">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+
+                <div>
+
+                    <h2>
+                        Add Trainer
+                    </h2>
+
+                    <p>
+                        Create a trainer profile.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeTrainerModal()"
+                aria-label="Close"
+            >
+                <i data-lucide="x"></i>
+            </button>
+
+        </div>
+
+
+        <!-- FORM -->
+        <form
+            method="POST"
+            action="{{ url_for('create_trainer') }}"
+            id="trainerForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <div class="form-grid">
+
+                    <!-- FULL NAME -->
+                    <div class="form-field full">
+
+                        <label for="trainer_full_name">
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="trainer_full_name"
+                            name="full_name"
+                            placeholder="Enter trainer full name"
+                            required
+                            maxlength="150"
+                        >
+
+                    </div>
+
+
+                    <!-- PHONE -->
+                    <div class="form-field">
+
+                        <label for="trainer_phone">
+                            Phone
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="trainer_phone"
+                            name="phone"
+                            placeholder="+91 XXXXX XXXXX"
+                            maxlength="30"
+                        >
+
+                    </div>
+
+
+                    <!-- LOCATION -->
+                    <div class="form-field">
+
+                        <label for="trainer_location">
+                            Location
+                        </label>
+
+                        <input
+                            type="text"
+                            id="trainer_location"
+                            name="location"
+                            placeholder="Bengaluru"
+                            maxlength="150"
+                        >
+
+                    </div>
+
+
+                    <!-- EXPERIENCE -->
+                    <div class="form-field">
+
+                        <label for="trainer_experience">
+                            Experience (Years)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="trainer_experience"
+                            name="experience_years"
+                            min="0"
+                            step="0.5"
+                            value="0"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- HOURLY RATE -->
+                    <div class="form-field">
+
+                        <label for="trainer_rate">
+                            Hourly Rate (₹)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="trainer_rate"
+                            name="hourly_rate"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- AVAILABILITY -->
+                    <div class="form-field">
+
+                        <label for="trainer_availability">
+                            Availability
+                        </label>
+
+                        <select
+                            id="trainer_availability"
+                            name="availability"
+                        >
+
+                            <option value="AVAILABLE">
+                                Available
+                            </option>
+
+                            <option value="BUSY">
+                                Busy
+                            </option>
+
+                            <option value="UNAVAILABLE">
+                                Unavailable
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- SKILLS -->
+                    <div class="form-field full">
+
+                        <label for="trainer_skills">
+                            Skills
+                        </label>
+
+                        <input
+                            type="text"
+                            id="trainer_skills"
+                            name="skills"
+                            placeholder="Python, Java, SQL, AWS"
+                            maxlength="500"
+                        >
+
+                        <small>
+                            Separate multiple skills
+                            with commas.
+                        </small>
+
+                    </div>
+
+
+                    <!-- BIO -->
+                    <div class="form-field full">
+
+                        <label for="trainer_bio">
+                            Bio
+                        </label>
+
+                        <textarea
+                            id="trainer_bio"
+                            name="bio"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="Brief trainer profile, expertise and background..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="closeTrainerModal()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    <i data-lucide="user-plus"></i>
+                    Create Trainer
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/trainers.js') }}"
+></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (
+        typeof lucide !== "undefined" &&
+        typeof lucide.createIcons === "function"
+    ) {
+        lucide.createIcons();
+    }
+
+});
+</script>
+
+{% endblock %}

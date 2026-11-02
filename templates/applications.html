@@ -1,0 +1,1732 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Applications - QT Platform
+{% endblock %}
+
+
+{% block page_title %}
+Applications
+{% endblock %}
+
+
+{% block css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/applications.css') }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="applications-page">
+
+
+    <!-- =====================================================
+         BACKGROUND DECORATION
+    ====================================================== -->
+
+    <div class="background-decoration decoration-one"></div>
+    <div class="background-decoration decoration-two"></div>
+
+
+    <!-- =====================================================
+         BREADCRUMB
+    ====================================================== -->
+
+    <div class="page-breadcrumb">
+
+        <span>
+            Dashboard
+        </span>
+
+        <i data-lucide="chevron-right"></i>
+
+        <strong>
+            Applications
+        </strong>
+
+    </div>
+
+
+    <!-- =====================================================
+         PAGE HEADING
+    ====================================================== -->
+
+    <div class="page-heading">
+
+        <div>
+
+            <h1>
+                Applications
+            </h1>
+
+            <p>
+                Manage trainer applications for QT Platform requirements.
+            </p>
+
+        </div>
+
+
+        {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+        <button
+            type="button"
+            class="primary-button"
+            onclick="openCreateApplicationModal()"
+        >
+
+            <i data-lucide="plus"></i>
+
+            New Application
+
+        </button>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="messages">
+
+                {% for category, message in messages %}
+
+                    <div class="message {{ category }}">
+
+                        {{ message }}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <div class="application-stats">
+
+
+        <!-- TOTAL -->
+
+        <div class="application-stat-card total">
+
+            <div class="application-stat-icon">
+
+                <i data-lucide="files"></i>
+
+            </div>
+
+            <div class="application-stat-content">
+
+                <span class="application-stat-label">
+                    Total Applications
+                </span>
+
+                <span class="application-stat-value">
+                    {{ applications|length }}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- PENDING -->
+
+        <div class="application-stat-card pending">
+
+            <div class="application-stat-icon">
+
+                <i data-lucide="clock-3"></i>
+
+            </div>
+
+            <div class="application-stat-content">
+
+                <span class="application-stat-label">
+                    Pending
+                </span>
+
+                <span class="application-stat-value">
+
+                    {{
+                        applications
+                        |selectattr("status", "equalto", "PENDING")
+                        |list
+                        |length
+                    }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ACCEPTED -->
+
+        <div class="application-stat-card accepted">
+
+            <div class="application-stat-icon">
+
+                <i data-lucide="check-circle"></i>
+
+            </div>
+
+            <div class="application-stat-content">
+
+                <span class="application-stat-label">
+                    Accepted
+                </span>
+
+                <span class="application-stat-value">
+
+                    {{
+                        applications
+                        |selectattr("status", "equalto", "ACCEPTED")
+                        |list
+                        |length
+                    }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- SELECTED -->
+
+        <div class="application-stat-card selected">
+
+            <div class="application-stat-icon">
+
+                <i data-lucide="badge-check"></i>
+
+            </div>
+
+            <div class="application-stat-content">
+
+                <span class="application-stat-label">
+                    Selected
+                </span>
+
+                <span class="application-stat-value">
+
+                    {{
+                        applications
+                        |selectattr("status", "equalto", "SELECTED")
+                        |list
+                        |length
+                    }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         APPLICATIONS CARD
+    ====================================================== -->
+
+    <div class="applications-card">
+
+
+        <!-- =================================================
+             TABLE HEADER
+        ================================================== -->
+
+        <div class="table-header">
+
+
+            <div class="table-header-left">
+
+                <div class="table-header-icon">
+
+                    <i data-lucide="file-text"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h3>
+                        Trainer Applications
+                    </h3>
+
+                    <p>
+                        {{ applications|length }} application(s)
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- SEARCH + FILTER -->
+
+            <div class="table-tools">
+
+
+                <div class="table-search">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        id="applicationSearch"
+                        placeholder="Search applications..."
+                    >
+
+                </div>
+
+
+                <select
+                    id="statusFilter"
+                    class="status-filter"
+                >
+
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option value="PENDING">
+                        Pending
+                    </option>
+
+                    <option value="ACCEPTED">
+                        Accepted
+                    </option>
+
+                    <option value="REJECTED">
+                        Rejected
+                    </option>
+
+                    <option value="SELECTED">
+                        Selected
+                    </option>
+
+                    <option value="WITHDRAWN">
+                        Withdrawn
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             APPLICATION TABLE
+        ================================================== -->
+
+        <div class="table-wrapper">
+
+            <table id="applicationsTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Application
+                        </th>
+
+                        <th>
+                            Requirement
+                        </th>
+
+                        <th>
+                            Trainer
+                        </th>
+
+                        <th>
+                            Match
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Created
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                {% for application in applications %}
+
+                    <tr
+                        class="application-row"
+                        data-status="{{ application.status }}"
+                    >
+
+
+                        <!-- =================================
+                             APPLICATION
+                        ================================== -->
+
+                        <td>
+
+                            <div class="table-application">
+
+                                <div class="application-avatar">
+
+                                    {{ application.id }}
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+
+                                        APP-{{ "%04d"|format(application.id) }}
+
+                                    </strong>
+
+                                    <small>
+
+                                        {{ application.source.replace("_", " ") }}
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- =================================
+                             REQUIREMENT
+                        ================================== -->
+
+                        <td>
+
+                            <div class="table-detail">
+
+                                <strong>
+
+                                    {% if application.requirement %}
+
+                                        {{ application.requirement.requirement_code }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </strong>
+
+
+                                <small>
+
+                                    {% if application.requirement %}
+
+                                        {{ application.requirement.title }}
+
+                                    {% else %}
+
+                                        Requirement unavailable
+
+                                    {% endif %}
+
+                                </small>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- =================================
+                             TRAINER
+                        ================================== -->
+
+                        <td>
+
+                            <div class="table-detail">
+
+                                <strong>
+
+                                    {% if application.trainer %}
+
+                                        {{ application.trainer.full_name }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </strong>
+
+
+                                <small>
+
+                                    {% if application.trainer %}
+
+                                        {{ application.trainer.location or "Location not specified" }}
+
+                                    {% endif %}
+
+                                </small>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- =================================
+                             MATCH
+                        ================================== -->
+
+                        <td>
+
+                            {% if application.match_score is not none %}
+
+                                <span
+                                    class="match-score
+                                    {% if application.match_score >= 80 %}
+                                        excellent
+                                    {% elif application.match_score >= 60 %}
+                                        good
+                                    {% else %}
+                                        average
+                                    {% endif %}
+                                    "
+                                >
+
+                                    {{ "%.0f"|format(application.match_score) }}%
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="no-score">
+                                    —
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- =================================
+                             STATUS
+                        ================================== -->
+
+                        <td>
+
+                            <span
+                                class="status-badge status-{{ application.status|lower }}"
+                            >
+
+                                <span class="status-dot"></span>
+
+                                {{ application.status.replace("_", " ") }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- =================================
+                             CREATED
+                        ================================== -->
+
+                        <td>
+
+                            {% if application.created_at %}
+
+                                <div class="created-date">
+
+                                    <strong>
+
+                                        {{ application.created_at.strftime("%d %b %Y") }}
+
+                                    </strong>
+
+                                    <small>
+
+                                        {{ application.created_at.strftime("%I:%M %p") }}
+
+                                    </small>
+
+                                </div>
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- =================================
+                             ACTIONS
+                        ================================== -->
+
+                        <td>
+
+                            <div class="action-buttons">
+
+
+                                <!-- VIEW -->
+
+                                <button
+                                    type="button"
+                                    class="icon-button view-button"
+                                    title="View application"
+                                    onclick="viewApplication({{ application.id }})"
+                                >
+
+                                    <i data-lucide="eye"></i>
+
+                                </button>
+
+
+                                {% if user.role == "TRAINER" %}
+
+
+                                    <!-- TRAINER: PENDING -->
+
+                                    {% if application.status == "PENDING" %}
+
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Accept this application?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="ACCEPTED"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button success-button"
+                                                title="Accept"
+                                            >
+
+                                                <i data-lucide="check"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Reject this application?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="REJECTED"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button danger"
+                                                title="Reject"
+                                            >
+
+                                                <i data-lucide="x"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                    {% endif %}
+
+
+                                {% else %}
+
+
+                                    <!-- =================================
+                                         ADMIN / VENDOR
+                                    ================================== -->
+
+
+                                    {% if application.status == "PENDING" %}
+
+
+                                        <!-- REJECT -->
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Reject this application?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="REJECTED"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button danger"
+                                                title="Reject"
+                                            >
+
+                                                <i data-lucide="x"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                        <!-- WITHDRAW -->
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Withdraw this application?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="WITHDRAWN"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button warning-button"
+                                                title="Withdraw"
+                                            >
+
+                                                <i data-lucide="undo-2"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                    {% elif application.status == "ACCEPTED" %}
+
+
+                                        <!-- SELECT -->
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Select this trainer for the requirement?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="SELECTED"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button success-button"
+                                                title="Select trainer"
+                                            >
+
+                                                <i data-lucide="badge-check"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                        <!-- REJECT -->
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Reject this accepted application?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="REJECTED"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button danger"
+                                                title="Reject"
+                                            >
+
+                                                <i data-lucide="x"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                        <!-- WITHDRAW -->
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Withdraw this application?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="WITHDRAWN"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button warning-button"
+                                                title="Withdraw"
+                                            >
+
+                                                <i data-lucide="undo-2"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                    {% elif application.status in ["REJECTED", "WITHDRAWN"] %}
+
+
+                                        <!-- REOPEN -->
+
+                                        <form
+                                            method="POST"
+                                            action="{{
+                                                url_for(
+                                                    'update_application_status',
+                                                    application_id=application.id
+                                                )
+                                            }}"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Move this application back to pending?'
+                                                );
+                                            "
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token }}"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="PENDING"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="icon-button"
+                                                title="Move to pending"
+                                            >
+
+                                                <i data-lucide="rotate-ccw"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                    {% endif %}
+
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                    <!-- =================================================
+                         APPLICATION DATA FOR DETAILS MODAL
+                    ================================================== -->
+
+                    <script
+                        type="application/json"
+                        id="application-data-{{ application.id }}"
+                    >
+                    {
+                        "id": {{ application.id }},
+
+                        "code":
+                            "APP-{{ '%04d'|format(application.id) }}",
+
+                        "status":
+                            {{ application.status|tojson }},
+
+                        "source":
+                            {{ application.source|tojson }},
+
+                        "match_score":
+                            {{ application.match_score|tojson }},
+
+                        "message":
+                            {{ (application.message or '')|tojson }},
+
+                        "response_note":
+                            {{ (application.response_note or '')|tojson }},
+
+                        "created_at":
+                            {{ application.created_at.strftime('%d %b %Y, %I:%M %p')|tojson if application.created_at else '—'|tojson }},
+
+                        "requirement":
+                        {
+                            "code":
+                                {{ (application.requirement.requirement_code if application.requirement else '—')|tojson }},
+
+                            "title":
+                                {{ (application.requirement.title if application.requirement else '—')|tojson }},
+
+                            "client":
+                                {{ (application.requirement.client_name if application.requirement else '—')|tojson }},
+
+                            "skill":
+                                {{ (application.requirement.skill if application.requirement else '—')|tojson }},
+
+                            "trainer_count":
+                                {{ (application.requirement.trainer_count if application.requirement else 0)|tojson }},
+
+                            "location":
+                                {{ (application.requirement.location if application.requirement else '—')|tojson }},
+
+                            "start_date":
+                                {{ (application.requirement.start_date|string if application.requirement and application.requirement.start_date else '—')|tojson }},
+
+                            "duration":
+                                {{ (application.requirement.duration if application.requirement else '—')|tojson }},
+
+                            "budget":
+                                {{ (application.requirement.budget if application.requirement else '—')|tojson }}
+                        },
+
+                        "trainer":
+                        {
+                            "name":
+                                {{ (application.trainer.full_name if application.trainer else '—')|tojson }},
+
+                            "location":
+                                {{ (application.trainer.location if application.trainer else '—')|tojson }},
+
+                            "phone":
+                                {{ (application.trainer.phone if application.trainer else '—')|tojson }},
+
+                            "experience":
+                                {{ (application.trainer.experience_years if application.trainer else 0)|tojson }},
+
+                            "skills":
+                                {{ (application.trainer.skills if application.trainer else '—')|tojson }}
+                        }
+                    }
+                    </script>
+
+
+                {% else %}
+
+
+                    <!-- =================================================
+                         EMPTY STATE
+                    ================================================== -->
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty-table"
+                        >
+
+                            <div class="empty-state">
+
+                                <i data-lucide="file-text"></i>
+
+                                <strong>
+                                    No applications found
+                                </strong>
+
+                                <span>
+                                    Applications will appear here when trainers are assigned to requirements.
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CREATE APPLICATION MODAL
+    ====================================================== -->
+
+    {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+    <div
+        id="createApplicationModal"
+        class="modal-overlay"
+        hidden
+        aria-hidden="true"
+    >
+
+        <div class="modal">
+
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Create Application
+                    </h2>
+
+                    <p>
+                        Apply a trainer to a QT Platform requirement.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    onclick="closeCreateApplicationModal()"
+                >
+
+                    <i data-lucide="x"></i>
+
+                </button>
+
+            </div>
+
+
+            <form
+                method="POST"
+                action="{{ url_for('create_application') }}"
+                id="createApplicationForm"
+            >
+
+                <div class="modal-body">
+
+
+                    <div class="form-field">
+
+                        <label for="requirement_id">
+                            Requirement
+                        </label>
+
+                        <select
+                            id="requirement_id"
+                            name="requirement_id"
+                            required
+                        >
+
+                            <option value="">
+                                Select requirement
+                            </option>
+
+                            {% for requirement in requirements %}
+
+                                {% if requirement.status not in ["COMPLETED", "CANCELLED"] %}
+
+                                    <option value="{{ requirement.id }}">
+
+                                        {{ requirement.requirement_code }}
+                                        -
+                                        {{ requirement.title }}
+
+                                    </option>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="trainer_id">
+                            Trainer
+                        </label>
+
+                        <select
+                            id="trainer_id"
+                            name="trainer_id"
+                            required
+                        >
+
+                            <option value="">
+                                Select trainer
+                            </option>
+
+                            {% for trainer in trainers %}
+
+                                {% if trainer.trainer_status == "ACTIVE" %}
+
+                                    <option value="{{ trainer.id }}">
+
+                                        {{ trainer.full_name }}
+
+                                        {% if trainer.location %}
+                                            - {{ trainer.location }}
+                                        {% endif %}
+
+                                    </option>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="match_score">
+                            Match Score
+                        </label>
+
+                        <input
+                            type="number"
+                            id="match_score"
+                            name="match_score"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            placeholder="Optional - 0 to 100"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="message">
+                            Message
+                        </label>
+
+                        <textarea
+                            id="message"
+                            name="message"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="Add an optional message..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="closeCreateApplicationModal()"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+
+                        <i data-lucide="send"></i>
+
+                        Create Application
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         APPLICATION DETAILS MODAL
+    ====================================================== -->
+
+    <div
+        id="applicationDetailsModal"
+        class="modal-overlay"
+        hidden
+        aria-hidden="true"
+    >
+
+        <div class="modal application-details-modal">
+
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Application Details
+                    </h2>
+
+                    <p id="detailApplicationCode">
+                        —
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    onclick="closeApplicationDetailsModal()"
+                >
+
+                    <i data-lucide="x"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- BODY -->
+
+            <div class="modal-body">
+
+
+                <!-- APPLICATION SUMMARY -->
+
+                <div class="details-summary">
+
+
+                    <div class="details-summary-item">
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong
+                            id="detailApplicationStatus"
+                            class="details-status"
+                        >
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="details-summary-item">
+
+                        <span>
+                            Match Score
+                        </span>
+
+                        <strong id="detailMatchScore">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="details-summary-item">
+
+                        <span>
+                            Source
+                        </span>
+
+                        <strong id="detailApplicationSource">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="details-summary-item">
+
+                        <span>
+                            Created
+                        </span>
+
+                        <strong id="detailCreated">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- REQUIREMENT -->
+
+                <div class="details-section">
+
+                    <div class="details-section-title">
+
+                        <i data-lucide="clipboard-list"></i>
+
+                        <span>
+                            Requirement Details
+                        </span>
+
+                    </div>
+
+
+                    <div class="details-grid">
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Requirement Code
+                            </span>
+
+                            <strong id="detailRequirementCode">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Title
+                            </span>
+
+                            <strong id="detailRequirementTitle">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Client
+                            </span>
+
+                            <strong id="detailClient">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Skill
+                            </span>
+
+                            <strong id="detailSkill">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Trainers Required
+                            </span>
+
+                            <strong id="detailTrainerCount">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Location
+                            </span>
+
+                            <strong id="detailRequirementLocation">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Start Date
+                            </span>
+
+                            <strong id="detailStartDate">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Duration
+                            </span>
+
+                            <strong id="detailDuration">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TRAINER -->
+
+                <div class="details-section">
+
+                    <div class="details-section-title">
+
+                        <i data-lucide="user-round"></i>
+
+                        <span>
+                            Trainer Details
+                        </span>
+
+                    </div>
+
+
+                    <div class="details-grid">
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Trainer
+                            </span>
+
+                            <strong id="detailTrainer">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Location
+                            </span>
+
+                            <strong id="detailTrainerLocation">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Phone
+                            </span>
+
+                            <strong id="detailTrainerPhone">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <span>
+                                Experience
+                            </span>
+
+                            <strong id="detailExperience">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="detail-item detail-full">
+
+                            <span>
+                                Skills
+                            </span>
+
+                            <strong id="detailTrainerSkills">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MESSAGE -->
+
+                <div class="details-section">
+
+                    <div class="details-section-title">
+
+                        <i data-lucide="message-square-text"></i>
+
+                        <span>
+                            Application Message
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="detail-text"
+                        id="detailMessage"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <!-- RESPONSE -->
+
+                <div class="details-section">
+
+                    <div class="details-section-title">
+
+                        <i data-lucide="message-circle-reply"></i>
+
+                        <span>
+                            Response
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="detail-text"
+                        id="detailResponse"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="closeApplicationDetailsModal()"
+                >
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/applications.js') }}"
+></script>
+
+{% endblock %}

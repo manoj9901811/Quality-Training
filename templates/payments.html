@@ -1,0 +1,1568 @@
+{% extends "base.html" %}
+
+{% block title %}Payments | QT Platform{% endblock %}
+{% block page_title %}
+Payment
+{% endblock %}
+
+{% block css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/payments.css') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div class="payments-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+
+    <div class="page-header">
+
+        <div class="page-header-left">
+
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <i data-lucide="chevron-right"></i>
+                <span>Payments</span>
+            </div>
+
+            <h1>Payments</h1>
+
+            <p>
+                Manage trainer payments, billing and payment status.
+            </p>
+
+        </div>
+
+        {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+        <button
+            type="button"
+            class="primary-button"
+            id="openCreatePayment"
+        >
+            <i data-lucide="plus"></i>
+            <span>Create Payment</span>
+        </button>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+         ===================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+        <div class="flash-container">
+
+            {% for category, message in messages %}
+
+            <div class="flash-message {{ category }}">
+
+                {% if category == "success" %}
+                    <i data-lucide="circle-check"></i>
+                {% else %}
+                    <i data-lucide="circle-alert"></i>
+                {% endif %}
+
+                <span>{{ message }}</span>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         STATISTICS
+         ===================================================== -->
+
+    <div class="payment-stats">
+
+        <div class="stat-card">
+
+            <div class="stat-icon total">
+                <i data-lucide="wallet"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Total Payments
+                </span>
+
+                <strong>
+                    {{ total_payments }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon pending">
+                <i data-lucide="clock-3"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Pending
+                </span>
+
+                <strong>
+                    {{ pending_payments }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon paid">
+                <i data-lucide="circle-check"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Paid
+                </span>
+
+                <strong>
+                    {{ paid_payments }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon overdue">
+                <i data-lucide="triangle-alert"></i>
+            </div>
+
+            <div class="stat-content">
+
+                <span class="stat-label">
+                    Overdue
+                </span>
+
+                <strong>
+                    {{ overdue_payments }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         AMOUNT SUMMARY
+         ===================================================== -->
+
+    <div class="amount-summary">
+
+        <div class="amount-summary-card">
+
+            <div>
+
+                <span>Total Billing</span>
+
+                <strong>
+                    ₹{{ "{:,.2f}".format(total_amount or 0) }}
+                </strong>
+
+            </div>
+
+            <i data-lucide="indian-rupee"></i>
+
+        </div>
+
+
+        <div class="amount-summary-card">
+
+            <div>
+
+                <span>Total Paid</span>
+
+                <strong>
+                    ₹{{ "{:,.2f}".format(paid_amount or 0) }}
+                </strong>
+
+            </div>
+
+            <i data-lucide="badge-check"></i>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTERS
+         ===================================================== -->
+
+    <div class="filter-card">
+
+        <form
+            method="GET"
+            action="{{ url_for('payments') }}"
+            class="payment-filter-form"
+        >
+
+            <div class="filter-field search-field">
+
+                <label for="paymentSearch">
+                    Search
+                </label>
+
+                <div class="input-with-icon">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        id="paymentSearch"
+                        name="search"
+                        value="{{ request.args.get('search', '') }}"
+                        placeholder="Search payment, project or trainer..."
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="projectFilter">
+                    Project
+                </label>
+
+                <select
+                    id="projectFilter"
+                    name="project"
+                >
+
+                    <option value="">
+                        All Projects
+                    </option>
+
+                    {% for project in projects %}
+
+                    <option
+                        value="{{ project.id }}"
+                        {% if request.args.get('project') == project.id|string %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ project.project_code }}
+                        -
+                        {{ project.project_name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="trainerFilter">
+                    Trainer
+                </label>
+
+                <select
+                    id="trainerFilter"
+                    name="trainer"
+                >
+
+                    <option value="">
+                        All Trainers
+                    </option>
+
+                    {% for trainer in trainers %}
+
+                    <option
+                        value="{{ trainer.id }}"
+                        {% if request.args.get('trainer') == trainer.id|string %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ trainer.full_name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="statusFilter">
+                    Status
+                </label>
+
+                <select
+                    id="statusFilter"
+                    name="status"
+                >
+
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option
+                        value="PENDING"
+                        {% if request.args.get('status') == 'PENDING' %}
+                            selected
+                        {% endif %}
+                    >
+                        Pending
+                    </option>
+
+                    <option
+                        value="PROCESSING"
+                        {% if request.args.get('status') == 'PROCESSING' %}
+                            selected
+                        {% endif %}
+                    >
+                        Processing
+                    </option>
+
+                    <option
+                        value="PAID"
+                        {% if request.args.get('status') == 'PAID' %}
+                            selected
+                        {% endif %}
+                    >
+                        Paid
+                    </option>
+
+                    <option
+                        value="OVERDUE"
+                        {% if request.args.get('status') == 'OVERDUE' %}
+                            selected
+                        {% endif %}
+                    >
+                        Overdue
+                    </option>
+
+                    <option
+                        value="CANCELLED"
+                        {% if request.args.get('status') == 'CANCELLED' %}
+                            selected
+                        {% endif %}
+                    >
+                        Cancelled
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-actions">
+
+                <button
+                    type="submit"
+                    class="filter-button"
+                >
+                    <i data-lucide="filter"></i>
+                    Filter
+                </button>
+
+                <a
+                    href="{{ url_for('payments') }}"
+                    class="clear-filter-button"
+                >
+                    Clear
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- =====================================================
+         PAYMENT TABLE
+         ===================================================== -->
+
+    <div class="table-card">
+
+        <div class="table-card-header">
+
+            <div>
+
+                <h2>
+                    Payment Records
+                </h2>
+
+                <p>
+                    Manage trainer billing and payment transactions.
+                </p>
+
+            </div>
+
+            <div class="record-count">
+                {{ payments|length }}
+
+                {% if payments|length == 1 %}
+                    Payment
+                {% else %}
+                    Payments
+                {% endif %}
+            </div>
+
+        </div>
+
+
+        {% if payments %}
+
+        <div class="table-wrapper">
+
+            <table class="payments-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>PAYMENT</th>
+                        <th>PROJECT</th>
+                        <th>TRAINER</th>
+                        <th>BILLING</th>
+                        <th>AMOUNT</th>
+                        <th>DUE DATE</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for payment in payments %}
+
+                    <tr>
+
+                        <!-- PAYMENT -->
+
+                        <td>
+
+                            <div class="payment-cell">
+
+                                <div class="payment-icon">
+                                    <i data-lucide="receipt"></i>
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        {{ payment.payment_code }}
+                                    </strong>
+
+                                    <span>
+                                        {{ payment.payment_type.replace('_', ' ') }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- PROJECT -->
+
+                        <td>
+
+                            {% if payment.project %}
+
+                            <div class="project-cell">
+
+                                <strong>
+                                    {{ payment.project.project_code }}
+                                </strong>
+
+                                <span>
+                                    {{ payment.project.project_name }}
+                                </span>
+
+                            </div>
+
+                            {% else %}
+
+                            <span class="muted">—</span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- TRAINER -->
+
+                        <td>
+
+                            {% if payment.trainer %}
+
+                            <div class="trainer-cell">
+
+                                <div class="trainer-avatar">
+                                    {{ payment.trainer.full_name[0]|upper }}
+                                </div>
+
+                                <span>
+                                    {{ payment.trainer.full_name }}
+                                </span>
+
+                            </div>
+
+                            {% else %}
+
+                            <span class="muted">—</span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- BILLING -->
+
+                        <td>
+
+                            <div class="billing-cell">
+
+                                <strong>
+                                    ₹{{ "{:,.2f}".format(payment.rate or 0) }}
+                                </strong>
+
+                                <span>
+                                    {{ payment.rate_type.replace('_', ' ') }}
+                                </span>
+
+                                {% if payment.rate_type == "PER_DAY" %}
+
+                                <small>
+                                    {{ payment.total_days }} day{% if payment.total_days != 1 %}s{% endif %}
+                                </small>
+
+                                {% elif payment.rate_type == "PER_HOUR" %}
+
+                                <small>
+                                    {{ payment.total_hours }} hour{% if payment.total_hours != 1 %}s{% endif %}
+                                </small>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- AMOUNT -->
+
+                        <td>
+
+                            <div class="amount-cell">
+
+                                <strong>
+                                    ₹{{ "{:,.2f}".format(payment.final_amount or 0) }}
+                                </strong>
+
+                                {% if payment.adjustment_amount %}
+
+                                <small>
+
+                                    Adjustment:
+
+                                    {% if payment.adjustment_amount > 0 %}
+                                        +
+                                    {% endif %}
+
+                                    ₹{{ "{:,.2f}".format(payment.adjustment_amount) }}
+
+                                </small>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- DUE DATE -->
+
+                        <td>
+
+                            {% if payment.due_date %}
+
+                            <div class="date-cell">
+
+                                <strong>
+                                    {{ payment.due_date.strftime("%d %b %Y") }}
+                                </strong>
+
+                                {% if payment.status == "OVERDUE" %}
+
+                                <span class="overdue-text">
+                                    Overdue
+                                </span>
+
+                                {% endif %}
+
+                            </div>
+
+                            {% else %}
+
+                            <span class="muted">
+                                No due date
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% set status_class = payment.status|lower %}
+
+                            <span class="payment-status {{ status_class }}">
+
+                                {% if payment.status == "PAID" %}
+
+                                    <i data-lucide="check-circle-2"></i>
+
+                                {% elif payment.status == "PENDING" %}
+
+                                    <i data-lucide="clock-3"></i>
+
+                                {% elif payment.status == "OVERDUE" %}
+
+                                    <i data-lucide="triangle-alert"></i>
+
+                                {% elif payment.status == "PROCESSING" %}
+
+                                    <i data-lucide="loader-circle"></i>
+
+                                {% else %}
+
+                                    <i data-lucide="circle-x"></i>
+
+                                {% endif %}
+
+                                {{ payment.status.replace('_', ' ') }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="table-actions">
+
+                                <button
+                                    type="button"
+                                    class="icon-button view-payment"
+                                    data-payment-id="{{ payment.id }}"
+                                    title="View Payment"
+                                >
+                                    <i data-lucide="eye"></i>
+                                </button>
+
+
+                                {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                                <button
+                                    type="button"
+                                    class="icon-button edit-payment"
+                                    data-payment-id="{{ payment.id }}"
+                                    title="Edit Payment"
+                                >
+                                    <i data-lucide="pencil"></i>
+                                </button>
+
+
+                                {% if payment.status not in ["PAID", "CANCELLED"] %}
+
+                                <button
+                                    type="button"
+                                    class="icon-button mark-paid-payment"
+                                    data-payment-id="{{ payment.id }}"
+                                    title="Mark as Paid"
+                                >
+                                    <i data-lucide="badge-check"></i>
+                                </button>
+
+                                {% endif %}
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <!-- EMPTY -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                <i data-lucide="wallet-cards"></i>
+            </div>
+
+            <h3>
+                No payment records
+            </h3>
+
+            <p>
+                Payment records will appear here once billing
+                has been created.
+            </p>
+
+            {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+            <button
+                type="button"
+                class="primary-button"
+                id="openCreatePaymentEmpty"
+            >
+                <i data-lucide="plus"></i>
+                Create Payment
+            </button>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CREATE / EDIT PAYMENT MODAL
+     ========================================================= -->
+
+<div
+    class="modal"
+    id="paymentModal"
+    aria-hidden="true"
+>
+
+    <div class="modal-background"></div>
+
+    <div class="modal-container payment-form-modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-eyebrow">
+                    PAYMENT
+                </span>
+
+                <h2 id="paymentModalHeading">
+                    Create Payment
+                </h2>
+
+                <p>
+                    Create a trainer payment record.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closePaymentModal"
+            >
+                <i data-lucide="x"></i>
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('payments') }}"
+            id="paymentForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <input
+                type="hidden"
+                name="action"
+                id="paymentAction"
+                value="create"
+            >
+
+            <input
+                type="hidden"
+                name="payment_id"
+                id="paymentId"
+                value=""
+            >
+
+
+            <div class="modal-body">
+
+                <!-- PROJECT -->
+
+                <div class="form-group">
+
+                    <label for="paymentProject">
+                        Project <span>*</span>
+                    </label>
+
+                    <select
+                        name="project_id"
+                        id="paymentProject"
+                        required
+                    >
+
+                        <option value="">
+                            Select project
+                        </option>
+
+                        {% for project in projects %}
+
+                        <option value="{{ project.id }}">
+                            {{ project.project_code }}
+                            -
+                            {{ project.project_name }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- TRAINER -->
+
+                <div class="form-group">
+
+                    <label for="paymentTrainer">
+                        Trainer <span>*</span>
+                    </label>
+
+                    <select
+                        name="trainer_id"
+                        id="paymentTrainer"
+                        required
+                    >
+
+                        <option value="">
+                            Select trainer
+                        </option>
+
+                        {% for trainer in trainers %}
+
+                        <option value="{{ trainer.id }}">
+                            {{ trainer.full_name }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- RATE -->
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="rateType">
+                            Rate Type
+                        </label>
+
+                        <select
+                            name="rate_type"
+                            id="rateType"
+                        >
+
+                            <option value="PER_DAY">
+                                Per Day
+                            </option>
+
+                            <option value="PER_HOUR">
+                                Per Hour
+                            </option>
+
+                            <option value="FIXED">
+                                Fixed Amount
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="paymentRate">
+                            Rate <span>*</span>
+                        </label>
+
+                        <div class="amount-input">
+
+                            <span>₹</span>
+
+                            <input
+                                type="number"
+                                name="rate"
+                                id="paymentRate"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DAYS / HOURS -->
+
+                <div class="form-row">
+
+                    <div
+                        class="form-group"
+                        id="daysGroup"
+                    >
+
+                        <label for="totalDays">
+                            Total Days
+                        </label>
+
+                        <input
+                            type="number"
+                            name="total_days"
+                            id="totalDays"
+                            min="0"
+                            step="1"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div
+                        class="form-group"
+                        id="hoursGroup"
+                    >
+
+                        <label for="totalHours">
+                            Total Hours
+                        </label>
+
+                        <input
+                            type="number"
+                            name="total_hours"
+                            id="totalHours"
+                            min="0"
+                            step="0.5"
+                            value="0"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- GROSS -->
+
+                <div class="form-group">
+
+                    <label for="grossAmount">
+                        Gross Amount
+                    </label>
+
+                    <div class="amount-input">
+
+                        <span>₹</span>
+
+                        <input
+                            type="number"
+                            name="gross_amount"
+                            id="grossAmount"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                            readonly
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- ADJUSTMENT -->
+
+                <div class="form-group">
+
+                    <label for="adjustmentAmount">
+                        Adjustment
+                    </label>
+
+                    <div class="amount-input">
+
+                        <span>₹</span>
+
+                        <input
+                            type="number"
+                            name="adjustment_amount"
+                            id="adjustmentAmount"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+                    <small class="field-help">
+                        Use a negative value for a deduction.
+                    </small>
+
+                </div>
+
+
+                <!-- FINAL -->
+
+                <div class="final-amount-box">
+
+                    <div>
+
+                        <span>
+                            Final Amount
+                        </span>
+
+                        <strong id="finalAmountPreview">
+                            ₹0.00
+                        </strong>
+
+                    </div>
+
+                    <i data-lucide="calculator"></i>
+
+                </div>
+
+
+                <!-- DUE DATE / STATUS -->
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="dueDate">
+                            Due Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="due_date"
+                            id="dueDate"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="paymentStatus">
+                            Status
+                        </label>
+
+                        <select
+                            name="status"
+                            id="paymentStatus"
+                        >
+
+                            <option value="PENDING">
+                                Pending
+                            </option>
+
+                            <option value="PROCESSING">
+                                Processing
+                            </option>
+
+                            <option value="PAID">
+                                Paid
+                            </option>
+
+                            <option value="OVERDUE">
+                                Overdue
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- METHOD -->
+
+                <div class="form-group">
+
+                    <label for="paymentMethod">
+                        Payment Method
+                    </label>
+
+                    <select
+                        name="payment_method"
+                        id="paymentMethod"
+                    >
+
+                        <option value="">
+                            Select payment method
+                        </option>
+
+                        <option value="BANK_TRANSFER">
+                            Bank Transfer
+                        </option>
+
+                        <option value="UPI">
+                            UPI
+                        </option>
+
+                        <option value="CASH">
+                            Cash
+                        </option>
+
+                        <option value="CHEQUE">
+                            Cheque
+                        </option>
+
+                        <option value="OTHER">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- REFERENCE -->
+
+                <div class="form-group">
+
+                    <label for="transactionReference">
+                        Transaction Reference
+                    </label>
+
+                    <input
+                        type="text"
+                        name="transaction_reference"
+                        id="transactionReference"
+                        maxlength="150"
+                        placeholder="Transaction / UTR number"
+                    >
+
+                </div>
+
+
+                <!-- NOTES -->
+
+                <div class="form-group">
+
+                    <label for="paymentNotes">
+                        Notes
+                    </label>
+
+                    <textarea
+                        name="notes"
+                        id="paymentNotes"
+                        rows="4"
+                        maxlength="2000"
+                        placeholder="Add payment notes..."
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelPaymentModal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="savePaymentButton"
+                >
+                    <i data-lucide="save"></i>
+                    <span>Save Payment</span>
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     VIEW PAYMENT MODAL
+     ========================================================= -->
+
+<div
+    class="modal"
+    id="viewPaymentModal"
+    aria-hidden="true"
+>
+
+    <div class="modal-background"></div>
+
+    <div class="modal-container view-payment-container">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-eyebrow">
+                    PAYMENT DETAILS
+                </span>
+
+                <h2>
+                    Payment Information
+                </h2>
+
+                <p>
+                    Complete payment transaction details.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closeViewPaymentModal"
+            >
+                <i data-lucide="x"></i>
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div class="payment-detail-grid">
+
+                <div class="detail-item">
+
+                    <span>
+                        Payment Code
+                    </span>
+
+                    <strong id="viewPaymentCode">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Status
+                    </span>
+
+                    <div id="viewPaymentStatus">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Project
+                    </span>
+
+                    <strong id="viewPaymentProject">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Trainer
+                    </span>
+
+                    <strong id="viewPaymentTrainer">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Rate
+                    </span>
+
+                    <strong id="viewPaymentRate">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Rate Type
+                    </span>
+
+                    <strong id="viewPaymentRateType">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Gross Amount
+                    </span>
+
+                    <strong id="viewPaymentGross">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Adjustment
+                    </span>
+
+                    <strong id="viewPaymentAdjustment">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item highlight">
+
+                    <span>
+                        Final Amount
+                    </span>
+
+                    <strong id="viewPaymentFinal">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Due Date
+                    </span>
+
+                    <strong id="viewPaymentDueDate">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Payment Date
+                    </span>
+
+                    <strong id="viewPaymentDate">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>
+                        Payment Method
+                    </span>
+
+                    <strong id="viewPaymentMethod">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item full-width">
+
+                    <span>
+                        Transaction Reference
+                    </span>
+
+                    <strong id="viewPaymentReference">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item full-width">
+
+                    <span>
+                        Notes
+                    </span>
+
+                    <p id="viewPaymentNotes">
+                        —
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="secondary-button"
+                id="closeViewPaymentButton"
+            >
+                Close
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAYMENT DATA
+     ========================================================= -->
+
+<script id="payment-data" type="application/json">
+[
+{% for payment in payments %}
+{
+    "id": {{ payment.id|tojson }},
+    "payment_code": {{ payment.payment_code|tojson }},
+    "project_id": {{ payment.project_id|tojson }},
+    "project_code": {{ payment.project.project_code|tojson if payment.project else "—"|tojson }},
+    "project_name": {{ payment.project.project_name|tojson if payment.project else "—"|tojson }},
+    "trainer_id": {{ payment.trainer_id|tojson }},
+    "trainer_name": {{ payment.trainer.full_name|tojson if payment.trainer else "—"|tojson }},
+    "payment_type": {{ payment.payment_type|tojson }},
+    "rate_type": {{ payment.rate_type|tojson }},
+    "rate": {{ payment.rate|default(0, true)|float|tojson }},
+    "total_days": {{ payment.total_days|default(0, true)|tojson }},
+    "total_hours": {{ payment.total_hours|default(0, true)|float|tojson }},
+    "gross_amount": {{ payment.gross_amount|default(0, true)|float|tojson }},
+    "adjustment_amount": {{ payment.adjustment_amount|default(0, true)|float|tojson }},
+    "final_amount": {{ payment.final_amount|default(0, true)|float|tojson }},
+    "status": {{ payment.status|tojson }},
+    "due_date": {{ payment.due_date.strftime("%Y-%m-%d")|tojson if payment.due_date else ""|tojson }},
+    "payment_date": {{ payment.payment_date.strftime("%Y-%m-%d")|tojson if payment.payment_date else ""|tojson }},
+    "payment_method": {{ payment.payment_method|tojson if payment.payment_method else ""|tojson }},
+    "transaction_reference": {{ payment.transaction_reference|tojson if payment.transaction_reference else ""|tojson }},
+    "notes": {{ payment.notes|tojson if payment.notes else ""|tojson }}
+}{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+</script>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script
+    src="{{ url_for('static', filename='js/payments.js') }}"
+></script>
+
+{% endblock %}

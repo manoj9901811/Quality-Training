@@ -1,0 +1,1033 @@
+{% extends "base.html" %}
+
+{% block title %}Documents - QT Platform{% endblock %}
+{% block page_title %}
+Documents
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/documents.css') }}?v=10">
+{% endblock %}
+
+{% block content %}
+
+<div class="documents-page">
+
+    <!-- Background decoration -->
+    <div class="page-bg-shape shape-one"></div>
+    <div class="page-bg-shape shape-two"></div>
+    <div class="page-bg-shape shape-three"></div>
+
+    <!-- ================= HEADER ================= -->
+
+    <div class="documents-header">
+
+        <div class="header-left">
+
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <i data-lucide="chevron-right"></i>
+                <strong>Documents</strong>
+            </div>
+
+            
+            <h1>Documents</h1>
+
+            <p>
+                Manage project, trainer, requirement and payment documents.
+            </p>
+
+        </div>
+
+        {% if user.role in ["SUPER_ADMIN", "VENDOR", "TRAINER"] %}
+
+        <button
+            type="button"
+            class="btn-primary"
+            onclick="openUploadModal()">
+
+            <i data-lucide="upload"></i>
+            <span>Upload Document</span>
+
+        </button>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================= STATISTICS ================= -->
+
+    <div class="document-stats">
+
+        <div class="stat-card">
+
+            <div class="stat-icon blue">
+                <i data-lucide="files"></i>
+            </div>
+
+            <div class="stat-content">
+                <span>Total Documents</span>
+                <strong>{{ documents|length }}</strong>
+            </div>
+
+            <span class="stat-tag blue-tag">Current</span>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon green">
+                <i data-lucide="file-text"></i>
+            </div>
+
+            <div class="stat-content">
+                <span>Requirements</span>
+
+                <strong>
+                    {{ documents|selectattr("document_type", "equalto", "REQUIREMENT")|list|length }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag green-tag">Active</span>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon red">
+                <i data-lucide="user"></i>
+            </div>
+
+            <div class="stat-content">
+                <span>Trainer Documents</span>
+
+                <strong>
+                    {{ documents|selectattr("trainer_id", "ne", none)|list|length }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag red-tag">Current</span>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon purple">
+                <i data-lucide="folder"></i>
+            </div>
+
+            <div class="stat-content">
+                <span>Project Documents</span>
+
+                <strong>
+                    {{ documents|selectattr("project_id", "ne", none)|list|length }}
+                </strong>
+
+            </div>
+
+            <span class="stat-tag purple-tag">Platform</span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= FILTER CARD ================= -->
+
+    <div class="filter-card">
+
+        <div class="filter-heading">
+
+            <div class="filter-heading-icon">
+                <i data-lucide="search"></i>
+            </div>
+
+            <div>
+                <h2>Filter Documents</h2>
+                <p>
+                    Search and filter documents by type, project, trainer or requirement.
+                </p>
+            </div>
+
+        </div>
+
+
+        <form
+            method="GET"
+            action="{{ url_for('documents') }}"
+            class="document-filter-form">
+
+            <div class="filter-field search-field">
+
+                <label>Search</label>
+
+                <div class="input-with-icon">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search document name or code...">
+
+                </div>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label>Document Type</label>
+
+                <select name="document_type">
+
+                    <option value="">All Types</option>
+
+                    {% for dtype in document_types %}
+
+                    <option
+                        value="{{ dtype }}"
+                        {% if document_type_filter == dtype %}
+                        selected
+                        {% endif %}>
+
+                        {{ dtype.replace("_", " ")|title }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label>Project</label>
+
+                <select name="project_id">
+
+                    <option value="">All Projects</option>
+
+                    {% for project in projects %}
+
+                    <option
+                        value="{{ project.id }}"
+                        {% if project_filter == project.id|string %}
+                        selected
+                        {% endif %}>
+
+                        {{ project.project_code }} -
+                        {{ project.project_name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label>Trainer</label>
+
+                <select name="trainer_id">
+
+                    <option value="">All Trainers</option>
+
+                    {% for trainer in trainers %}
+
+                    <option
+                        value="{{ trainer.id }}"
+                        {% if trainer_filter == trainer.id|string %}
+                        selected
+                        {% endif %}>
+
+                        {{ trainer.full_name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-actions">
+
+                <button
+                    type="submit"
+                    class="btn-filter">
+
+                    <i data-lucide="filter"></i>
+                    Filter
+
+                </button>
+
+                <a
+                    href="{{ url_for('documents') }}"
+                    class="btn-reset">
+
+                    <i data-lucide="rotate-ccw"></i>
+                    Reset
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- ================= DOCUMENT LIBRARY ================= -->
+
+    <div class="documents-card">
+
+        <div class="documents-card-header">
+
+            <div class="library-heading">
+
+                <div class="library-icon">
+                    <i data-lucide="folder-open"></i>
+                </div>
+
+                <div>
+                    <h2>Document Library</h2>
+
+                    <p>
+                        {{ documents|length }}
+                        document{{ "" if documents|length == 1 else "s" }}
+                        found
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        {% if documents %}
+
+        <div class="table-wrapper">
+
+            <table class="documents-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Document</th>
+                        <th>Type</th>
+                        <th>Linked To</th>
+                        <th>Size</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for document in documents %}
+
+                    <tr>
+
+                        <!-- DOCUMENT -->
+
+                        <td>
+
+                            <div class="document-info">
+
+                                <div class="file-icon
+                                    {% if document.original_name.lower().endswith('.pdf') %}
+                                    pdf
+                                    {% elif document.original_name.lower().endswith(('.jpg', '.jpeg', '.png')) %}
+                                    image
+                                    {% elif document.original_name.lower().endswith(('.doc', '.docx')) %}
+                                    word
+                                    {% elif document.original_name.lower().endswith(('.xls', '.xlsx')) %}
+                                    excel
+                                    {% else %}
+                                    default
+                                    {% endif %}">
+
+                                    {% if document.original_name.lower().endswith('.pdf') %}
+                                        <i data-lucide="file-text"></i>
+
+                                    {% elif document.original_name.lower().endswith(('.jpg', '.jpeg', '.png')) %}
+                                        <i data-lucide="image"></i>
+
+                                    {% elif document.original_name.lower().endswith(('.doc', '.docx')) %}
+                                        <i data-lucide="file-text"></i>
+
+                                    {% elif document.original_name.lower().endswith(('.xls', '.xlsx')) %}
+                                        <i data-lucide="table-2"></i>
+
+                                    {% else %}
+                                        <i data-lucide="file"></i>
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="document-name">
+
+                                    <strong>
+                                        {{ document.original_name }}
+                                    </strong>
+
+                                    <span>
+                                        {{ document.document_code }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- TYPE -->
+
+                        <td>
+
+                            <span class="type-badge">
+                                {{ document.document_type.replace("_", " ").title() }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- LINKED TO -->
+
+                        <td>
+
+                            <div class="linked-info">
+
+                                {% if document.project %}
+
+                                <span>
+                                    <i data-lucide="folder"></i>
+                                    {{ document.project.project_code }}
+                                </span>
+
+                                {% elif document.requirement %}
+
+                                <span>
+                                    <i data-lucide="clipboard-list"></i>
+                                    {{ document.requirement.requirement_code }}
+                                </span>
+
+                                {% elif document.trainer %}
+
+                                <span>
+                                    <i data-lucide="user"></i>
+                                    {{ document.trainer.full_name }}
+                                </span>
+
+                                {% elif document.application %}
+
+                                <span>
+                                    <i data-lucide="send"></i>
+                                    Application #{{ document.application.id }}
+                                </span>
+
+                                {% elif document.payment %}
+
+                                <span>
+                                    <i data-lucide="credit-card"></i>
+                                    {{ document.payment.payment_code }}
+                                </span>
+
+                                {% else %}
+
+                                <span class="not-linked">
+                                    Not linked
+                                </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- SIZE -->
+
+                        <td>
+
+                            <span
+                                class="file-size"
+                                data-size="{{ document.file_size }}">
+
+                                {{ document.file_size }} bytes
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- DATE -->
+
+                        <td>
+
+                            {% if document.created_at %}
+
+                            <div class="date-info">
+
+                                <strong>
+                                    {{
+                                        (
+                                            document.created_at
+                                            + timedelta(hours=5, minutes=30)
+                                        ).strftime("%d %b %Y")
+                                    }}
+                                </strong>
+
+                                <span>
+                                    {{
+                                        (
+                                            document.created_at
+                                            + timedelta(hours=5, minutes=30)
+                                        ).strftime("%I:%M %p")
+                                    }}
+                                </span>
+
+                            </div>
+
+                            {% else %}
+
+                            —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="action-buttons">
+
+                                <a
+                                    href="{{ url_for('download_document', document_id=document.id) }}"
+                                    class="icon-btn view-btn"
+                                    title="View / Download">
+
+                                    <i data-lucide="eye"></i>
+
+                                </a>
+
+
+                                {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                                <button
+                                    type="button"
+                                    class="icon-btn delete-btn"
+                                    title="Delete"
+                                    onclick="confirmDelete(
+                                        {{ document.id }},
+                                        '{{ document.original_name|replace("'", "\\'") }}'
+                                    )">
+
+                                    <i data-lucide="trash-2"></i>
+
+                                </button>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        {% else %}
+
+        <!-- EMPTY STATE -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                <i data-lucide="folder-open"></i>
+            </div>
+
+            <h3>No documents found</h3>
+
+            <p>
+                Upload your first document to get started.
+            </p>
+
+            {% if user.role in ["SUPER_ADMIN", "VENDOR", "TRAINER"] %}
+
+            <button
+                type="button"
+                class="btn-primary"
+                onclick="openUploadModal()">
+
+                <i data-lucide="upload"></i>
+                Upload Document
+
+            </button>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- UPLOAD MODAL -->
+<!-- ========================================================= -->
+
+<div
+    id="uploadModal"
+    class="modal-overlay"
+    onclick="closeModalOnOverlay(event)">
+
+    <div
+        class="document-modal"
+        onclick="event.stopPropagation()">
+
+
+        <!-- MODAL HEADER -->
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-title-icon">
+                    <i data-lucide="upload"></i>
+                </div>
+
+                <div>
+                    <h2>Upload Document</h2>
+
+                    <p>
+                        Add a document to the QT Platform.
+                    </p>
+                </div>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeUploadModal()">
+
+                <i data-lucide="x"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form
+            method="POST"
+            action="{{ url_for('documents') }}"
+            enctype="multipart/form-data"
+            id="uploadDocumentForm">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}">
+
+            <input
+                type="hidden"
+                name="action"
+                value="upload">
+
+
+            <!-- SCROLLABLE BODY -->
+
+            <div class="modal-body">
+
+
+                <!-- FILE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Document <span>*</span>
+                    </label>
+
+                    <div
+                        class="upload-dropzone"
+                        id="uploadDropzone">
+
+                        <input
+                            type="file"
+                            id="document_file"
+                            name="document_file"
+                            required
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.jpg,.jpeg,.png">
+
+
+                        <div
+                            class="upload-placeholder"
+                            id="uploadPlaceholder">
+
+                            <div class="upload-icon">
+                                <i data-lucide="cloud-upload"></i>
+                            </div>
+
+                            <strong>Choose a file</strong>
+
+                            <span>
+                                or drag and drop here
+                            </span>
+
+                            <small>
+                                PDF, DOC, DOCX, XLS, XLSX, CSV, PPT, PPTX, TXT, JPG, PNG
+                                <br>
+                                Maximum size: 10 MB
+                            </small>
+
+                        </div>
+
+
+                        <div
+                            class="selected-file"
+                            id="selectedFile"
+                            style="display:none;">
+
+                            <div class="selected-file-icon">
+                                <i data-lucide="file"></i>
+                            </div>
+
+                            <div class="selected-file-info">
+
+                                <strong id="selectedFileName">
+                                    —
+                                </strong>
+
+                                <span id="selectedFileSize">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="remove-file-btn"
+                                onclick="clearSelectedFile(event)">
+
+                                <i data-lucide="x"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TYPE -->
+
+                <div class="form-group">
+
+                    <label>Document Type</label>
+
+                    <select
+                        name="document_type"
+                        id="document_type">
+
+                        {% for dtype in document_types %}
+
+                        <option value="{{ dtype }}">
+                            {{ dtype.replace("_", " ").title() }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- PROJECT -->
+
+                <div class="form-group">
+
+                    <label>Project</label>
+
+                    <select
+                        name="project_id"
+                        id="project_id">
+
+                        <option value="">
+                            No Project
+                        </option>
+
+                        {% for project in projects %}
+
+                        <option value="{{ project.id }}">
+                            {{ project.project_code }} -
+                            {{ project.project_name }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- REQUIREMENT -->
+
+                <div class="form-group">
+
+                    <label>Requirement</label>
+
+                    <select
+                        name="requirement_id"
+                        id="requirement_id">
+
+                        <option value="">
+                            No Requirement
+                        </option>
+
+                        {% for requirement in requirements %}
+
+                        <option value="{{ requirement.id }}">
+                            {{ requirement.requirement_code }} -
+                            {{ requirement.title }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- TRAINER -->
+
+                <div class="form-group">
+
+                    <label>Trainer</label>
+
+                    <select
+                        name="trainer_id"
+                        id="trainer_id">
+
+                        <option value="">
+                            No Trainer
+                        </option>
+
+                        {% for trainer in trainers %}
+
+                        <option
+                            value="{{ trainer.id }}"
+                            {% if user.role == "TRAINER"
+                               and user.trainer_profile
+                               and trainer.id == user.trainer_profile.id %}
+                            selected
+                            {% endif %}>
+
+                            {{ trainer.full_name }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- APPLICATION -->
+
+                <div class="form-group">
+
+                    <label>Application ID</label>
+
+                    <input
+                        type="number"
+                        name="application_id"
+                        placeholder="Optional application ID"
+                        min="1">
+
+                </div>
+
+
+                <!-- PAYMENT -->
+
+                <div class="form-group">
+
+                    <label>Payment ID</label>
+
+                    <input
+                        type="number"
+                        name="payment_id"
+                        placeholder="Optional payment ID"
+                        min="1">
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="form-group">
+
+                    <label>Description</label>
+
+                    <textarea
+                        name="description"
+                        rows="4"
+                        maxlength="1000"
+                        placeholder="Add a short description..."></textarea>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="closeUploadModal()">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-primary"
+                    id="uploadSubmitBtn">
+
+                    <i data-lucide="upload"></i>
+                    Upload Document
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- DELETE FORM -->
+<!-- ========================================================= -->
+
+<form
+    method="POST"
+    action="{{ url_for('documents') }}"
+    id="deleteDocumentForm"
+    style="display:none;">
+
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token }}">
+
+    <input
+        type="hidden"
+        name="action"
+        value="delete">
+
+    <input
+        type="hidden"
+        name="document_id"
+        id="deleteDocumentId">
+
+</form>
+
+
+<!-- ========================================================= -->
+<!-- DELETE MODAL -->
+<!-- ========================================================= -->
+
+<div
+    id="deleteModal"
+    class="modal-overlay"
+    onclick="closeDeleteModalOnOverlay(event)">
+
+    <div
+        class="confirm-modal"
+        onclick="event.stopPropagation()">
+
+        <div class="confirm-icon">
+            <i data-lucide="trash-2"></i>
+        </div>
+
+        <h3>Delete Document?</h3>
+
+        <p id="deleteMessage">
+            Are you sure you want to delete this document?
+        </p>
+
+        <div class="confirm-actions">
+
+            <button
+                type="button"
+                class="btn-secondary"
+                onclick="closeDeleteModal()">
+
+                Cancel
+
+            </button>
+
+            <button
+                type="button"
+                class="btn-danger"
+                onclick="submitDelete()">
+
+                Delete
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script src="{{ url_for('static', filename='js/documents.js') }}?v=10"></script>
+
+{% endblock %}

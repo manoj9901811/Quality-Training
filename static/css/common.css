@@ -1,0 +1,764 @@
+/* ============================================================
+   QT PLATFORM
+   COMMON STYLES
+   Global Layout / Sidebar / Topbar
+============================================================ */
+
+
+/* ============================================================
+   GLOBAL
+============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+html {
+    font-size: 16px;
+}
+
+
+html,
+body {
+    min-height: 100%;
+}
+
+
+body {
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f5f7fb;
+
+    color: #1f2937;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+a {
+    color: inherit;
+}
+
+
+img,
+svg {
+    max-width: 100%;
+}
+
+
+/* ============================================================
+   APP LAYOUT
+============================================================ */
+
+.app-layout {
+    min-height: 100vh;
+
+    display: flex;
+}
+
+
+/* ============================================================
+   SIDEBAR
+============================================================ */
+
+.sidebar {
+    width: 270px;
+    min-height: 100vh;
+
+    position: fixed;
+
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    z-index: 100;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #111827;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   BRAND
+============================================================ */
+
+.brand {
+    height: 78px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 0 22px;
+
+    flex-shrink: 0;
+
+    border-bottom: 1px solid #273244;
+}
+
+
+.brand-logo {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #2563eb;
+
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    letter-spacing: 0.5px;
+}
+
+
+.brand-text {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.brand-text strong {
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    line-height: 1.25;
+
+    white-space: nowrap;
+}
+
+
+.brand-text span {
+    margin-top: 3px;
+
+    color: #9ca3af;
+
+    font-size: 11px;
+    font-weight: 400;
+
+    line-height: 1.3;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   SIDEBAR NAVIGATION
+============================================================ */
+
+.sidebar-nav {
+    flex: 1;
+
+    padding: 16px 13px;
+
+    overflow-y: auto;
+}
+
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: #374151;
+
+    border-radius: 10px;
+}
+
+
+.nav-section {
+    padding: 19px 11px 8px;
+
+    color: #6b7280;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    letter-spacing: 0.9px;
+
+    text-transform: uppercase;
+}
+
+
+.nav-item {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 11px 12px;
+
+    margin-bottom: 3px;
+
+    border-radius: 8px;
+
+    color: #d1d5db;
+
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    line-height: 1.4;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.nav-item svg {
+    width: 19px;
+    height: 19px;
+
+    min-width: 19px;
+
+    color: #9ca3af;
+
+    stroke-width: 1.8;
+
+    transition: color 0.2s ease;
+}
+
+
+.nav-item:hover {
+    background: #1f2937;
+
+    color: #ffffff;
+
+    transform: translateX(2px);
+}
+
+
+.nav-item:hover svg {
+    color: #ffffff;
+}
+
+
+.nav-item.active {
+    background: #2563eb;
+
+    color: #ffffff;
+}
+
+
+.nav-item.active svg {
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   SIDEBAR FOOTER
+============================================================ */
+
+.sidebar-footer {
+    padding: 15px 13px;
+
+    flex-shrink: 0;
+
+    border-top: 1px solid #273244;
+}
+
+
+.logout-link {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 11px 12px;
+
+    border-radius: 8px;
+
+    color: #d1d5db;
+
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    line-height: 1.4;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.logout-link svg {
+    width: 19px;
+    height: 19px;
+
+    stroke-width: 1.8;
+}
+
+
+.logout-link:hover {
+    background: #1f2937;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   MAIN AREA
+============================================================ */
+
+.main-area {
+    width: calc(100% - 270px);
+
+    min-height: 100vh;
+
+    margin-left: 270px;
+}
+
+
+/* ============================================================
+   TOPBAR
+============================================================ */
+
+.topbar {
+    height: 78px;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 50;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 32px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.topbar h2 {
+    color: #111827;
+
+    font-size: 22px;
+    font-weight: 650;
+
+    line-height: 1.25;
+
+    letter-spacing: -0.3px;
+}
+
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+
+    gap: 24px;
+}
+
+
+/* ============================================================
+   NOTIFICATION
+============================================================ */
+
+.notification-button {
+    position: relative;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #4b5563;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.notification-button:hover {
+    background: #f9fafb;
+
+    border-color: #d1d5db;
+
+    color: #111827;
+}
+
+
+.notification-button svg {
+    width: 20px;
+    height: 20px;
+
+    stroke-width: 1.8;
+}
+
+
+.notification-dot {
+    position: absolute;
+
+    width: 8px;
+    height: 8px;
+
+    top: 6px;
+    right: 6px;
+
+    background: #ef4444;
+
+    border: 2px solid #ffffff;
+
+    border-radius: 50%;
+}
+
+
+/* ============================================================
+   USER INFO
+============================================================ */
+
+.user-info {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+}
+
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #2563eb;
+
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+
+.user-details strong {
+    color: #111827;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    line-height: 1.35;
+
+    white-space: nowrap;
+}
+
+
+.user-details span {
+    margin-top: 3px;
+
+    color: #6b7280;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    line-height: 1.3;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   CONTENT
+============================================================ */
+
+.content {
+    width: 100%;
+
+    padding: 32px;
+}
+
+
+/* ============================================================
+   FOCUS
+============================================================ */
+
+:focus-visible {
+    outline: 2px solid #2563eb;
+
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   GENERIC SCROLLBAR
+============================================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+
+    border-radius: 10px;
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 1200px) {
+
+    .sidebar {
+        width: 250px;
+    }
+
+
+    .main-area {
+        width: calc(100% - 250px);
+
+        margin-left: 250px;
+    }
+
+
+    .content {
+        padding: 28px;
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .sidebar {
+        width: 230px;
+    }
+
+
+    .main-area {
+        width: calc(100% - 230px);
+
+        margin-left: 230px;
+    }
+
+
+    .topbar {
+        padding: 0 22px;
+    }
+
+
+    .content {
+        padding: 25px;
+    }
+
+
+    .topbar-right {
+        gap: 16px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .sidebar {
+        width: 220px;
+    }
+
+
+    .main-area {
+        width: calc(100% - 220px);
+
+        margin-left: 220px;
+    }
+
+
+    .topbar {
+        height: 70px;
+
+        padding: 0 16px;
+    }
+
+
+    .topbar h2 {
+        font-size: 19px;
+    }
+
+
+    .content {
+        padding: 20px;
+    }
+
+
+    .user-details {
+        display: none;
+    }
+
+
+    .topbar-right {
+        gap: 12px;
+    }
+
+
+    .notification-button {
+        width: 40px;
+        height: 40px;
+    }
+
+
+    .nav-item {
+        font-size: 15px;
+    }
+
+}
+
+
+@media (max-width: 520px) {
+
+    .sidebar {
+        width: 200px;
+    }
+
+
+    .main-area {
+        width: calc(100% - 200px);
+
+        margin-left: 200px;
+    }
+
+
+    .brand {
+        padding: 0 15px;
+    }
+
+
+    .brand-logo {
+        width: 38px;
+        height: 38px;
+
+        font-size: 15px;
+    }
+
+
+    .brand-text strong {
+        font-size: 15px;
+    }
+
+
+    .brand-text span {
+        font-size: 10px;
+    }
+
+
+    .nav-item {
+        padding: 10px;
+
+        gap: 10px;
+
+        font-size: 14px;
+    }
+
+
+    .nav-item svg {
+        width: 18px;
+        height: 18px;
+
+        min-width: 18px;
+    }
+
+
+    .content {
+        padding: 16px;
+    }
+}

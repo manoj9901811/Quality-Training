@@ -1,0 +1,1528 @@
+{% extends "base.html" %}
+
+{% block title %}
+Requirements - QT Platform
+{% endblock %}
+
+{% block page_title %}
+Requirements
+{% endblock %}
+
+{% block css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/requirements.css') }}"
+>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="requirements-page">
+
+    <!-- ==========================================
+         BACKGROUND
+    =========================================== -->
+
+    <div class="requirements-background" aria-hidden="true">
+
+        <div class="background-circle-top"></div>
+
+<div class="background-circle-left"></div>
+
+        <div class="background-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         PAGE HEADING
+    =========================================== -->
+    <div class="page-breadcrumb">
+
+        <span>
+            Dashboard
+        </span>
+
+        <i data-lucide="chevron-right"></i>
+
+        <strong>
+            Requirements
+        </strong>
+
+    </div>
+
+    <div class="page-heading">
+
+        <div>
+
+            <h1>
+                Requirements
+            </h1>
+
+            <p>
+                Manage client training requirements and trainer demand.
+            </p>
+
+        </div>
+
+
+        {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+        <button
+            type="button"
+            class="primary-button"
+            id="openCreateModal"
+        >
+
+            <i data-lucide="clipboard-plus"></i>
+
+            New Requirement
+
+        </button>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ==========================================
+         FLASH MESSAGES
+    =========================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <div class="messages">
+
+                {% for category, message in messages %}
+
+                    <div class="message {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- ==========================================
+         REQUIREMENT STATISTICS
+    =========================================== -->
+
+    <div class="requirement-stats">
+
+
+        <!-- TOTAL -->
+
+        <article class="requirement-stat-card">
+
+            <div class="requirement-stat-icon blue">
+
+                <i data-lucide="clipboard-list"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Total Requirements
+                </span>
+
+                <strong>
+                    {{ total_requirements or 0 }}
+                </strong>
+
+            </div>
+
+        </article>
+
+
+        <!-- OPEN -->
+
+        <article class="requirement-stat-card">
+
+            <div class="requirement-stat-icon green">
+
+                <i data-lucide="circle-check"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Open
+                </span>
+
+                <strong>
+                    {{ open_requirements or 0 }}
+                </strong>
+
+            </div>
+
+        </article>
+
+
+        <!-- IN PROGRESS -->
+
+        <article class="requirement-stat-card">
+
+            <div class="requirement-stat-icon orange">
+
+                <i data-lucide="loader-circle"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    In Progress
+                </span>
+
+                <strong>
+                    {{ in_progress_requirements or 0 }}
+                </strong>
+
+            </div>
+
+        </article>
+
+
+        <!-- ASSIGNED -->
+
+        <article class="requirement-stat-card">
+
+            <div class="requirement-stat-icon purple">
+
+                <i data-lucide="user-check"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Assigned
+                </span>
+
+                <strong>
+                    {{ assigned_requirements or 0 }}
+                </strong>
+
+            </div>
+
+        </article>
+
+
+        <!-- COMPLETED -->
+
+        <article class="requirement-stat-card">
+
+            <div class="requirement-stat-icon teal">
+
+                <i data-lucide="check-check"></i>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Completed
+                </span>
+
+                <strong>
+                    {{ completed_requirements or 0 }}
+                </strong>
+
+            </div>
+
+        </article>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         REQUIREMENTS CARD
+    =========================================== -->
+
+    <div class="requirements-card">
+
+
+        <!-- TABLE HEADER -->
+
+        <div class="table-header">
+
+            <div>
+
+                <h3>
+                    Requirements
+                </h3>
+
+                <p>
+                    {{ requirements|length }} requirement(s)
+                </p>
+
+            </div>
+
+
+            <div class="table-tools">
+
+                <div class="table-search">
+
+                    <i data-lucide="search"></i>
+
+                    <input
+                        type="text"
+                        id="requirementSearch"
+                        placeholder="Search requirements..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <select
+                    id="statusFilter"
+                    class="status-filter"
+                >
+
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option value="OPEN">
+                        Open
+                    </option>
+
+                    <option value="IN_PROGRESS">
+                        In Progress
+                    </option>
+
+                    <option value="ASSIGNED">
+                        Assigned
+                    </option>
+
+                    <option value="COMPLETED">
+                        Completed
+                    </option>
+
+                    <option value="CANCELLED">
+                        Cancelled
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ==========================================
+             TABLE
+        =========================================== -->
+
+        {% if requirements %}
+
+        <div class="table-wrapper">
+
+            <table id="requirementsTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Requirement
+                        </th>
+
+                        <th>
+                            Client
+                        </th>
+
+                        <th>
+                            Skill
+                        </th>
+
+                        <th>
+                            Trainers
+                        </th>
+
+                        <th>
+                            Location
+                        </th>
+
+                        <th>
+                            Start Date
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for requirement in requirements %}
+
+                    <tr
+                        class="requirement-row"
+                        data-status="{{ requirement.status }}"
+                    >
+
+
+                        <!-- REQUIREMENT -->
+
+                        <td>
+
+                            <div class="table-user">
+
+                                <div class="table-avatar">
+
+                                    <i data-lucide="clipboard-list"></i>
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+                                        {{ requirement.title }}
+                                    </strong>
+
+                                    <span>
+
+                                        {{ requirement.requirement_code }}
+
+                                        {% if requirement.duration %}
+                                            · {{ requirement.duration }}
+                                        {% endif %}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+
+                        <!-- CLIENT -->
+
+                        <td>
+
+                            {{ requirement.client_name }}
+
+                        </td>
+
+
+
+                        <!-- SKILL -->
+
+                        <td>
+
+                            <span class="skill-badge">
+
+                                {{ requirement.skill }}
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- TRAINERS -->
+
+                        <td>
+
+                            <span class="trainer-count">
+
+                                {{ requirement.trainer_count }}
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- LOCATION -->
+
+                        <td>
+
+                            {% if requirement.location %}
+
+                                {{ requirement.location }}
+
+                            {% else %}
+
+                                <span class="muted">
+                                    —
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+
+                        <!-- START DATE -->
+
+                        <td>
+
+                            {% if requirement.start_date %}
+
+                                {{ requirement.start_date.strftime('%d %b %Y') }}
+
+                            {% else %}
+
+                                <span class="muted">
+                                    —
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if requirement.status == "OPEN" %}
+
+                                <span class="status-badge active">
+                                    <span class="status-dot"></span>
+                                    Open
+                                </span>
+
+                            {% elif requirement.status == "IN_PROGRESS" %}
+
+                                <span class="status-badge progress">
+                                    <span class="status-dot"></span>
+                                    In Progress
+                                </span>
+
+                            {% elif requirement.status == "ASSIGNED" %}
+
+                                <span class="status-badge assigned">
+                                    <span class="status-dot"></span>
+                                    Assigned
+                                </span>
+
+                            {% elif requirement.status == "COMPLETED" %}
+
+                                <span class="status-badge completed">
+                                    <span class="status-dot"></span>
+                                    Completed
+                                </span>
+
+                            {% elif requirement.status == "CANCELLED" %}
+
+                                <span class="status-badge inactive">
+                                    <span class="status-dot"></span>
+                                    Cancelled
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+
+                        <!-- ACTION -->
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="icon-button view-requirement"
+                                data-id="{{ requirement.id }}"
+                                title="View Requirement"
+                            >
+
+                                <i data-lucide="more-vertical"></i>
+
+                            </button>
+
+                        </td>
+
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+        <!-- NO SEARCH RESULTS -->
+
+        <div
+            class="empty-table"
+            id="noResults"
+            hidden
+        >
+
+            <div class="empty-state">
+
+                <i data-lucide="search-x"></i>
+
+                <h4>
+                    No requirements found
+                </h4>
+
+                <p>
+                    Try changing your search or status filter.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% else %}
+
+
+        <!-- EMPTY DATABASE -->
+
+        <div class="empty-table">
+
+            <div class="empty-state">
+
+                <i data-lucide="clipboard-list"></i>
+
+                <h4>
+                    No requirements yet
+                </h4>
+
+                <p>
+                    Create your first client training requirement.
+                </p>
+
+
+                {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="openCreateModalEmpty"
+                >
+
+                    <i data-lucide="plus"></i>
+
+                    Create Requirement
+
+                </button>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+
+    <!-- =========================================================
+         CREATE / EDIT MODAL
+    ========================================================== -->
+
+    <div
+        class="modal-overlay"
+        id="requirementFormModal"
+        aria-hidden="true"
+        hidden
+    >
+
+        <div class="modal modal-large">
+
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2 id="formModalTitle">
+                        Create Requirement
+                    </h2>
+
+                    <p id="formModalSubtitle">
+                        Add a new client training requirement.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    data-close-modal="requirementFormModal"
+                    aria-label="Close"
+                >
+
+                    <i data-lucide="x"></i>
+
+                </button>
+
+            </div>
+
+
+
+            <!-- FORM -->
+
+            <form
+                method="POST"
+                action="{{ url_for('create_requirement') }}"
+                id="requirementForm"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+
+                <div class="modal-body">
+
+
+                    <div
+                        class="form-error"
+                        id="formError"
+                        hidden
+                    ></div>
+
+
+
+                    <!-- REQUIREMENT INFORMATION -->
+
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            Requirement Information
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <!-- TITLE -->
+
+                            <div class="form-field full">
+
+                                <label for="title">
+                                    Requirement Title
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="title"
+                                    name="title"
+                                    maxlength="200"
+                                    placeholder="Example: Python Full Stack Trainer"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <!-- CLIENT -->
+
+                            <div class="form-field">
+
+                                <label for="client_name">
+                                    Client Name
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="client_name"
+                                    name="client_name"
+                                    maxlength="150"
+                                    placeholder="Enter client name"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <!-- SKILL -->
+
+                            <div class="form-field">
+
+                                <label for="skill">
+                                    Required Skill
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="skill"
+                                    name="skill"
+                                    maxlength="150"
+                                    placeholder="Python, Java, AWS..."
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <!-- TRAINER COUNT -->
+
+                            <div class="form-field">
+
+                                <label for="trainer_count">
+                                    Trainers Required
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="trainer_count"
+                                    name="trainer_count"
+                                    min="1"
+                                    max="1000"
+                                    value="1"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <!-- LOCATION -->
+
+                            <div class="form-field">
+
+                                <label for="location">
+                                    Location
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="location"
+                                    name="location"
+                                    maxlength="150"
+                                    placeholder="Bengaluru / Online"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- SCHEDULE -->
+
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            Schedule & Budget
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <!-- START DATE -->
+
+                            <div class="form-field">
+
+                                <label for="start_date">
+                                    Start Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="start_date"
+                                    name="start_date"
+                                >
+
+                            </div>
+
+
+
+                            <!-- DURATION -->
+
+                            <div class="form-field">
+
+                                <label for="duration">
+                                    Duration
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="duration"
+                                    name="duration"
+                                    maxlength="100"
+                                    placeholder="Example: 3 Months"
+                                >
+
+                            </div>
+
+
+
+                            <!-- BUDGET -->
+
+                            <div class="form-field">
+
+                                <label for="budget">
+                                    Budget
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="budget"
+                                    name="budget"
+                                    min="0"
+                                    step="0.01"
+                                    value="0"
+                                    placeholder="0"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- NOTES -->
+
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            Additional Information
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="notes">
+                                Notes
+                            </label>
+
+                            <textarea
+                                id="notes"
+                                name="notes"
+                                rows="4"
+                                placeholder="Add additional requirement details..."
+                            ></textarea>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- EDIT STATUS -->
+
+                    <div
+                        class="form-section"
+                        id="editStatusSection"
+                        hidden
+                    >
+
+                        <div class="form-section-title">
+                            Status
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="requirementStatus">
+                                Requirement Status
+                            </label>
+
+                            <select
+                                id="requirementStatus"
+                                name="status"
+                            >
+
+                                <option value="OPEN">
+                                    Open
+                                </option>
+
+                                <option value="IN_PROGRESS">
+                                    In Progress
+                                </option>
+
+                                <option value="ASSIGNED">
+                                    Assigned
+                                </option>
+
+                                <option value="COMPLETED">
+                                    Completed
+                                </option>
+
+                                <option value="CANCELLED">
+                                    Cancelled
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- FOOTER -->
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        data-close-modal="requirementFormModal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="formSubmitButton"
+                    >
+
+                        <i data-lucide="save"></i>
+
+                        Create Requirement
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================================
+         VIEW MODAL
+    ========================================================== -->
+
+    <div
+        class="modal-overlay"
+        id="requirementViewModal"
+        aria-hidden="true"
+        hidden
+    >
+
+        <div class="modal modal-large">
+
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <div>
+
+                    <span
+                        class="requirement-code"
+                        id="viewCode"
+                    ></span>
+
+                    <h2 id="viewTitle">
+                        Requirement
+                    </h2>
+
+                    <p id="viewCreated"></p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    data-close-modal="requirementViewModal"
+                    aria-label="Close"
+                >
+
+                    <i data-lucide="x"></i>
+
+                </button>
+
+            </div>
+
+
+
+            <!-- BODY -->
+
+            <div class="modal-body">
+
+                <div class="view-grid">
+
+
+                    <!-- DETAILS -->
+
+                    <div class="view-card">
+
+                        <div class="view-card-title">
+                            Requirement Details
+                        </div>
+
+
+                        <div class="detail-list">
+
+                            <div class="detail-item">
+                                <span>Client</span>
+                                <strong id="viewClient">—</strong>
+                            </div>
+
+                            <div class="detail-item">
+                                <span>Skill</span>
+                                <strong id="viewSkill">—</strong>
+                            </div>
+
+                            <div class="detail-item">
+                                <span>Trainers Required</span>
+                                <strong id="viewTrainerCount">—</strong>
+                            </div>
+
+                            <div class="detail-item">
+                                <span>Location</span>
+                                <strong id="viewLocation">—</strong>
+                            </div>
+
+                            <div class="detail-item">
+                                <span>Start Date</span>
+                                <strong id="viewStartDate">—</strong>
+                            </div>
+
+                            <div class="detail-item">
+                                <span>Duration</span>
+                                <strong id="viewDuration">—</strong>
+                            </div>
+
+                            <div class="detail-item">
+                                <span>Budget</span>
+                                <strong id="viewBudget">—</strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- STATUS -->
+
+                    <div class="view-card">
+
+                        <div class="view-card-title">
+                            Status
+                        </div>
+
+
+                        <div class="view-status-area">
+
+                            <div id="viewStatus"></div>
+
+                            <p id="viewStatusDescription"></p>
+
+                        </div>
+
+
+                        {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                        <form
+                            method="POST"
+                            id="statusForm"
+                            class="status-form"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token }}"
+                            >
+
+
+                            <label for="viewStatusSelect">
+                                Change Status
+                            </label>
+
+
+                            <div class="status-form-row">
+
+                                <select
+                                    name="status"
+                                    id="viewStatusSelect"
+                                >
+
+                                    <option value="OPEN">
+                                        Open
+                                    </option>
+
+                                    <option value="IN_PROGRESS">
+                                        In Progress
+                                    </option>
+
+                                    <option value="ASSIGNED">
+                                        Assigned
+                                    </option>
+
+                                    <option value="COMPLETED">
+                                        Completed
+                                    </option>
+
+                                    <option value="CANCELLED">
+                                        Cancelled
+                                    </option>
+
+                                </select>
+
+
+                                <button
+                                    type="submit"
+                                    class="primary-button"
+                                >
+                                    Update
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                        {% endif %}
+
+                    </div>
+
+
+
+                    <!-- NOTES -->
+
+                    <div class="view-card view-full">
+
+                        <div class="view-card-title">
+                            Notes
+                        </div>
+
+                        <div
+                            class="notes-display"
+                            id="viewNotes"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- CREATED BY -->
+
+                    <div class="view-card">
+
+                        <div class="view-card-title">
+                            Created By
+                        </div>
+
+
+                        <div class="creator-display">
+
+                            <strong id="viewCreatorName">
+                                —
+                            </strong>
+
+                            <span id="viewCreatorEmail">
+                                —
+                            </span>
+
+                            <span id="viewCreatorRole">
+                                —
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer">
+
+                {% if user.role in ["SUPER_ADMIN", "VENDOR"] %}
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="editFromView"
+                >
+                    Edit Requirement
+                </button>
+
+                {% endif %}
+
+
+                {% if user.role == "SUPER_ADMIN" %}
+
+                <button
+                    type="button"
+                    class="danger-button"
+                    id="deleteRequirement"
+                >
+                    Delete
+                </button>
+
+                {% endif %}
+
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    data-close-modal="requirementViewModal"
+                >
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- DELETE FORM -->
+
+    {% if user.role == "SUPER_ADMIN" %}
+
+    <form
+        method="POST"
+        id="deleteRequirementForm"
+        hidden
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token }}"
+        >
+
+    </form>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+
+
+{% block js %}
+
+<script>
+
+window.requirementData = [
+
+    {% for requirement in requirements %}
+
+    {
+        id:
+            {{ requirement.id|tojson }},
+
+        requirement_code:
+            {{ requirement.requirement_code|tojson }},
+
+        title:
+            {{ requirement.title|tojson }},
+
+        client_name:
+            {{ requirement.client_name|tojson }},
+
+        skill:
+            {{ requirement.skill|tojson }},
+
+        trainer_count:
+            {{ requirement.trainer_count|tojson }},
+
+        location:
+            {{ (requirement.location or "")|tojson }},
+
+        start_date:
+
+            {% if requirement.start_date %}
+
+                {{ requirement.start_date.strftime('%Y-%m-%d')|tojson }}
+
+            {% else %}
+
+                null
+
+            {% endif %},
+
+        duration:
+            {{ (requirement.duration or "")|tojson }},
+
+        budget:
+            {{ (requirement.budget or 0)|tojson }},
+
+        status:
+            {{ requirement.status|tojson }},
+
+        notes:
+            {{ (requirement.notes or "")|tojson }},
+
+        created_at:
+
+            {% if requirement.created_at %}
+
+                {{ requirement.created_at.strftime(
+                    '%d %b %Y, %I:%M %p'
+                )|tojson }}
+
+            {% else %}
+
+                ""
+
+            {% endif %},
+
+        creator_name:
+
+            {% if requirement.creator %}
+
+                {{ requirement.creator.full_name|tojson }}
+
+            {% else %}
+
+                ""
+
+            {% endif %},
+
+        creator_email:
+
+            {% if requirement.creator %}
+
+                {{ requirement.creator.email|tojson }}
+
+            {% else %}
+
+                ""
+
+            {% endif %},
+
+        creator_role:
+
+            {% if requirement.creator %}
+
+                {{ requirement.creator.role|tojson }}
+
+            {% else %}
+
+                ""
+
+            {% endif %}
+    }
+
+    {% if not loop.last %},{% endif %}
+
+    {% endfor %}
+
+];
+
+
+window.requirementUrls = {
+
+    create:
+        "{{ url_for('create_requirement') }}",
+
+    editBase:
+        "{{ url_for('edit_requirement', requirement_id=0) }}",
+
+    statusBase:
+        "{{ url_for('update_requirement_status', requirement_id=0) }}",
+
+    deleteBase:
+        "{{ url_for('delete_requirement', requirement_id=0) }}"
+
+};
+
+</script>
+
+
+<script
+    src="{{ url_for('static', filename='js/requirements.js') }}"
+></script>
+
+
+<script>
+
+if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+}
+
+</script>
+
+{% endblock %}
